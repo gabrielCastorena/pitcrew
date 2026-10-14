@@ -1,0 +1,9 @@
+{
+  "name": "setup-architect",
+  "version": "0.1.0",
+  "description": "Entrevista sobre un proyecto, investiga herramientas, las verifica con el CLI sarch y arma un plan de setup de Claude Code que el usuario aprueba y aplica en su terminal.",
+  "author": {
+    "name": "Gabriel García",
+    "url": "https://github.com/gabrielCastorena"
+  }
+}

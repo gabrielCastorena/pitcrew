@@ -1,0 +1,14 @@
+{
+  "name": "setup-architect",
+  "description": "Marketplace del plugin setup-architect: arma un setup de Claude Code verificado para tu proyecto.",
+  "owner": {
+    "name": "Gabriel García"
+  },
+  "plugins": [
+    {
+      "name": "setup-architect",
+      "source": "./plugin",
+      "description": "Entrevista sobre un proyecto, investiga herramientas, las verifica con el CLI sarch y arma un plan de setup de Claude Code que el usuario aprueba y aplica en su terminal."
+    }
+  ]
+}

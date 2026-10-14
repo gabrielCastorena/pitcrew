@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "environment": "project",
+  "items": [
+    {
+      "candidate": {
+        "name": "github-mcp",
+        "kind": "mcp",
+        "source_url": "https://github.com/github/github-mcp-server",
+        "ref": null,
+        "description": "Servidor MCP oficial de GitHub para repos, issues y PRs.",
+        "why_fit": "El proyecto vive en GitHub y el flujo necesita crear PRs.",
+        "stage": "construir"
+      },
+      "operations": [
+        {
+          "op": "add_mcp",
+          "name": "github",
+          "scope": "project",
+          "transport": "http",
+          "command": null,
+          "url": "https://api.githubcopilot.com/mcp/",
+          "env_names": ["GITHUB_TOKEN"]
+        }
+      ]
+    }
+  ],
+  "researched": [
+    {
+      "name": "github-mcp",
+      "source_url": "https://github.com/github/github-mcp-server",
+      "description": "Servidor MCP oficial de GitHub para repos, issues y PRs."
+    }
+  ]
+}

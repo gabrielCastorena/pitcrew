@@ -1,0 +1,21 @@
+# Umbrales de la rúbrica de confianza, cargados por config.py.
+# Las claves ausentes usan el default del campo correspondiente en Config.
+
+max_inactive_days = 365
+new_repo_days = 30
+new_repo_star_veto = 500
+typosquat_max_distance = 2
+fork_min_ahead = 5
+
+# Límites del CLAUDE.md que escribe el aplicador.
+claude_md_max_lines = 200
+# Regex (sin distinguir mayúsculas) que no pueden aparecer en el CLAUDE.md.
+claude_md_forbidden = [
+    'curl\s',
+    'wget\s',
+    '\|\s*(ba)?sh',
+    '\bsudo\b',
+    'rm\s+-rf',
+    '\beval\b',
+    'chmod\s+\+x',
+]

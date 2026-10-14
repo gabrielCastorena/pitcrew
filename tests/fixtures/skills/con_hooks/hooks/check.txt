@@ -1,0 +1,1 @@
+Verifica que el entorno tenga las herramientas necesarias antes de instalar.

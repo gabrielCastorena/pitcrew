@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "environment": "project",
+  "items": [
+    {
+      "candidate": {
+        "name": "contexto-del-proyecto",
+        "kind": "config",
+        "source_url": "",
+        "ref": null,
+        "description": "Contexto del proyecto.",
+        "why_fit": "Claude lo carga al iniciar cada sesión del proyecto.",
+        "stage": "planear"
+      },
+      "operations": [
+        {
+          "op": "write_file",
+          "path": "CLAUDE.md",
+          "content": "# API de pagos\n\n- Stack: Python 3.12 y PostgreSQL.\n- Corre los tests con pytest antes de abrir un PR.\n- Al tocar el esquema, usa la skill revisor-migraciones.\n"
+        }
+      ]
+    },
+    {
+      "candidate": {
+        "name": "revisor-migraciones",
+        "kind": "skill",
+        "source_url": "https://github.com/anthropics/skills",
+        "ref": null,
+        "description": "Skills oficiales de ejemplo para Claude Code.",
+        "why_fit": "Revisas a mano cada migración; esta skill las repasa antes del commit.",
+        "stage": "revisar"
+      },
+      "operations": [
+        {
+          "op": "copy_skill",
+          "repo": "anthropics/skills",
+          "sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "subdir": "skill",
+          "dest_name": "revisor-migraciones"
+        }
+      ]
+    }
+  ],
+  "researched": [
+    {
+      "name": "revisor-migraciones",
+      "source_url": "https://github.com/anthropics/skills",
+      "description": "Skills oficiales de ejemplo para Claude Code."
+    }
+  ]
+}

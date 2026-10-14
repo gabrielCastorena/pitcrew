@@ -1,0 +1,6 @@
+# Dueños de GitHub que cuentan como oficiales, uno por línea.
+# Líneas vacías y que empiezan con '#' se ignoran. Se comparan en
+# minúsculas. El parser de este archivo lo carga config.py.
+anthropics
+modelcontextprotocol
+github

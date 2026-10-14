@@ -1,0 +1,7 @@
+# Repos conocidos y populares del ecosistema, uno por línea (owner/name).
+# Líneas vacías y que empiezan con '#' se ignoran. El parser de este
+# archivo lo carga config.py; aquí solo vive la lista.
+modelcontextprotocol/servers
+github/github-mcp-server
+anthropics/skills
+anthropics/claude-code
