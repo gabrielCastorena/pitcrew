@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from setup_architect.apply.claude_md import validate_claude_md
-from setup_architect.config import Config, ConfigError, load_config
+from pitcrew.apply.claude_md import validate_claude_md
+from pitcrew.config import Config, ConfigError, load_config
 
 CFG = Config()
 REPO_CONFIG_DIR = Path(__file__).resolve().parent.parent / "config"

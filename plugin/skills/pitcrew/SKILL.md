@@ -1,13 +1,13 @@
 ---
-name: setup-architect
+name: pitcrew
 description: Úsala cuando el usuario quiera armar o actualizar su setup de Claude Code para un proyecto (qué skills, servidores MCP, herramientas y CLAUDE.md le conviene tener). Entrevista, investiga, verifica y entrega un plan que el usuario aplica en su terminal.
 ---
 
-# Setup Architect
+# Pitcrew
 
 Vas a dejarle al usuario un plan de setup para trabajar su proyecto con Claude: un `CLAUDE.md`, skills, servidores MCP y pasos manuales, cada pieza con una razón concreta de estar ahí y un nivel de confianza calculado por un programa, no por ti.
 
-El sistema tiene dos mitades. Tú llevas el razonamiento: entrevistas, decides qué encaja, redactas. El CLI `sarch` lleva todo lo que debe ser determinista: verifica cada herramienta, muestra el plan e instala. El resultado se mide así: el usuario termina con al menos una herramienta útil que no conocía, nada que sobre, y sabe por qué está cada pieza.
+El sistema tiene dos mitades. Tú llevas el razonamiento: entrevistas, decides qué encaja, redactas. El CLI `pitcrew` lleva todo lo que debe ser determinista: verifica cada herramienta, muestra el plan e instala. El resultado se mide así: el usuario termina con al menos una herramienta útil que no conocía, nada que sobre, y sabe por qué está cada pieza.
 
 ## Las tres reglas que sostienen el diseño
 
@@ -21,13 +21,13 @@ Léelas antes de empezar. Cada paso de abajo las aplica.
 
 ## 1. Antes de empezar
 
-Comprueba que el CLI está disponible con `command -v sarch`. Si no está, dile al usuario cómo instalarlo y no sigas: con pipx, `pipx install --editable <ruta del checkout de setup-architect>` desde su terminal (el `README.md` del repo lo explica). Tiene que ser una instalación editable porque la configuración del verificador vive en el directorio `config/` del checkout y todavía no se empaqueta. No intentes instalarlo tú ni suplirlo a mano: sin el CLI no hay verificación, y sin verificación no hay plan.
+Comprueba que el CLI está disponible con `command -v pitcrew`. Si no está, dile al usuario cómo instalarlo y no sigas: con pipx, `pipx install --editable <ruta del checkout de pitcrew>` desde su terminal (el `README.md` del repo lo explica). Tiene que ser una instalación editable porque la configuración del verificador vive en el directorio `config/` del checkout y todavía no se empaqueta. No intentes instalarlo tú ni suplirlo a mano: sin el CLI no hay verificación, y sin verificación no hay plan.
 
-Después mira si ya hay un setup instalado por una corrida anterior. El manifiesto vive en `.claude/setup-architect/manifest.json` dentro del proyecto, o en `~/.claude/setup-architect/manifest.json` para el setup global. Por cada uno que exista, corre la auditoría, que es de solo lectura:
+Después mira si ya hay un setup instalado por una corrida anterior. El manifiesto vive en `.claude/pitcrew/manifest.json` dentro del proyecto, o en `~/.claude/pitcrew/manifest.json` para el setup global. Por cada uno que exista, corre la auditoría, que es de solo lectura:
 
 ```bash
-sarch audit --project .
-sarch audit
+pitcrew audit --project .
+pitcrew audit
 ```
 
 La primera forma, desde el directorio del proyecto, audita el manifiesto del proyecto; la segunda, el global. Cuéntale al usuario lo que haya quedado obsoleto: "hay una versión nueva", "inactivo" o "el repo ya no existe". Lo que sale "al día" no hace falta mencionarlo. Lo que no viene de un repo de GitHub no se puede auditar, y la salida lo dice. Usa lo que ya está instalado como contexto para todo lo que sigue: no lo propongas otra vez, y si algo quedó obsoleto, busca su reemplazo.
@@ -80,7 +80,7 @@ Los patrones de configuración suelen acabar como líneas del `CLAUDE.md` que re
 Escribe los items elegidos en `items.json`, en un directorio de trabajo (uno temporal sirve), con esta forma y ninguna otra clave: `{"items": [...]}`. Cada item lleva `candidate` y `operations` tal como se describen en el paso 5. Después corre:
 
 ```bash
-sarch verify items.json -o cards.json
+pitcrew verify items.json -o cards.json
 ```
 
 `cards.json` queda como una lista de fichas, una por item, con `candidate` (el nombre), `level`, `reasons`, `flags`, `pinned_ref` y `popularity`. Si el comando termina con código 2, la entrada tiene mal la forma y el mensaje dice qué campo: corrige la forma y vuelve a correrlo. Nunca edites `cards.json` a mano: es la salida del verificador, y una ficha escrita por ti le mostraría al usuario un nivel que nadie calculó.
@@ -156,7 +156,7 @@ Solo existen cinco operaciones. Cualquier otra invalida el plan, porque la lista
 - **`write_file`** (`path`, `content`): escribe un archivo, solo en dos sitios. En un plan de proyecto, `CLAUDE.md` y rutas bajo `.claude/skills/`, relativas al proyecto. En un plan global, `~/.claude/CLAUDE.md` y rutas bajo `~/.claude/skills/`. Nunca `settings.json`, `settings.local.json`, `.mcp.json` ni rutas con un segmento `hooks`: todos esos configuran o ejecutan shell en Claude Code. Una skill escrita así no puede traer `hooks` en su frontmatter, ni la sintaxis de inyección de shell de Claude Code (un signo de exclamación seguido de un comando entre comillas invertidas, o un bloque de código cuya valla de apertura lleva un signo de exclamación), ni patrones que descargan algo y lo pasan a un intérprete. `write_file` reemplaza el archivo entero: si ya existe, el aplicador lo respalda y le muestra al usuario el diff. El contenido de una skill escrita con `write_file` lo redactas tú, a partir de la entrevista, igual que el `CLAUDE.md` y por el mismo motivo: Claude lo cargará como instrucciones, así que no puede venir de un investigador ni de una página. No copies ni adaptes el texto de una skill que alguien encontró en internet; si esa skill vive en un repo, se instala con `copy_skill`, que la verifica y la escanea.
 - **`copy_skill`** (`repo`, `sha`, `subdir`, `dest_name`): copia una skill desde GitHub. `repo` es exactamente el `owner/name` de la `source_url` del item; si difieren, el item se bloquea, porque se instalaría un repo distinto del verificado. `sha` son 40 caracteres hexadecimales de un commit que es la cabeza o un ancestro de la rama por defecto; un commit de otra rama o de un fork se bloquea. `subdir` es la carpeta de la skill dentro del repo, y `dest_name` el nombre con el que queda en `.claude/skills/`: empieza por letra o dígito, sigue con letras, dígitos, punto, guion o guion bajo, tiene como máximo 64 caracteres, no puede ser `hooks` y no puede existir ya en el destino.
 - **`add_mcp`** (`name`, `scope`, `transport`, `command`, `url`, `env_names`): registra un servidor MCP. Con `transport` `stdio`, `command` es la lista de argumentos y `url` es `null`; el paquete lleva versión exacta `MAYOR.MENOR.PARCHE`, como `["npx", "-y", "paquete@1.2.3"]`. Nunca `latest`, un rango ni un paquete sin versión: quien controla el paquete podría cambiar mañana lo que se ejecuta. `docker` solo se admite en la forma `docker run`, con las opciones `-i`, `--rm`, `--init` y `-e NOMBRE` y nada más antes de una imagen fijada como `imagen@sha256:` más 64 hexadecimales. Otros programas no se pueden fijar y se rechazan. Un `stdio` con `env_names` va en `scope` `user`: con `project` se rechaza, porque el valor del secreto quedaría escrito en el `.mcp.json` del repo. Con `transport` `http`, `url` es la dirección y `command` es `null`; sus `env_names` son informativos, el aplicador no los pide ni los pasa, y el servidor se registra sin cabeceras de autenticación. `name` empieza por letra o dígito, sigue con letras, dígitos, guion o guion bajo (sin puntos) y tiene como máximo 64 caracteres; cada nombre de `env_names` empieza por letra o guion bajo y sigue con letras, dígitos o guion bajo. Si ya existe un servidor con ese `name`, el paso falla y la corrida se detiene: usa lo que el usuario te dijo que ya tiene.
-- **`set_env`** (`name`): pide en la terminal del usuario el valor de un secreto y lo guarda fuera del repo, como una línea `export` en `~/.config/setup-architect/secrets.env`. Solo lleva el nombre de la variable. Nada carga ese archivo por sí solo: avisa al usuario de que debe cargarlo desde su shell para que la variable exista.
+- **`set_env`** (`name`): pide en la terminal del usuario el valor de un secreto y lo guarda fuera del repo, como una línea `export` en `~/.config/pitcrew/secrets.env`. Solo lleva el nombre de la variable. Nada carga ese archivo por sí solo: avisa al usuario de que debe cargarlo desde su shell para que la variable exista.
 - **`manual_step`** (`title`, `steps`): una guía para lo que no se puede automatizar, como instalar una herramienta CLI, configurar un sitio o todo lo de un plan de chat. El aplicador la imprime al final para que el usuario la siga. Escribe los pasos con tus palabras y remite a la documentación oficial por su nombre; no copies comandos de instalación de una página, porque el usuario los ejecutaría confiando en ti. Si el `manual_step` viene de un investigador, sus `steps` nunca se copian tal cual al plan: llevan tu redacción (paso 3) o el item se queda fuera. El verificador mide el repo de la fuente, no lo que dicen los pasos, así que un nivel `Confiable` no dice nada sobre ese texto.
 
 Los secretos nunca van en el plan, ni en `content`, ni en `command`, ni en `steps`: solo el nombre de la variable, en `set_env` o en `env_names`. El aplicador pide el valor en la terminal del usuario.
@@ -179,15 +179,15 @@ Escribe poco y útil: qué es el proyecto, su stack, sus convenciones, cómo tra
 
 El `CLAUDE.md` va como un item más, con un `write_file`. No tiene fuente, así que su `source_url` va vacía (`""`), su `kind` es `config` y su `description` la escribes tú en menos de ocho palabras. Como no lo devolvió ningún investigador, no lleva entrada en `researched`. Se confirma siempre aparte: todo item con un `write_file` sale como máximo en `Revisar`, declare la fuente que declare, así que el aplicador muestra su contenido completo en el resumen que el usuario aprueba y además pregunta por él. Al no tener un repo de GitHub como fuente lleva también el aviso de que nada del item se verificó ("fuente no soportada"); ese aviso lo lleva cualquier item sin un repo de GitHub detrás, como los pasos manuales de un plan de chat. No le pongas la `source_url` de un repo para evitar el aviso: seguiría en `Revisar`, y el nivel dejaría de describir lo que se instala.
 
-Cuando el plan esté completo, cada item necesita su ficha. Si agregaste, quitaste o cambiaste algún item respecto a lo que verificaste en el paso 4, escribe en `items.json` los items finales del plan y vuelve a correr `sarch verify items.json -o cards.json`. Un item sin ficha aparece en las vistas como "sin ficha del verificador".
+Cuando el plan esté completo, cada item necesita su ficha. Si agregaste, quitaste o cambiaste algún item respecto a lo que verificaste en el paso 4, escribe en `items.json` los items finales del plan y vuelve a correr `pitcrew verify items.json -o cards.json`. Un item sin ficha aparece en las vistas como "sin ficha del verificador".
 
 ## 6. Presentación
 
 Pregunta, literal: "¿Lo quieres ver en texto o visual?" Las dos vistas salen del mismo `plan.json` y muestran lo mismo; cambia el formato.
 
 ```bash
-sarch render plan.json --cards cards.json --format text
-sarch render plan.json --cards cards.json --format html --open
+pitcrew render plan.json --cards cards.json --format text
+pitcrew render plan.json --cards cards.json --format html --open
 ```
 
 La primera imprime el plan en la salida; muéstraselo al usuario tal cual, sin resumirlo ni reordenarlo, porque tu resumen podría no coincidir con lo que se va a instalar. La segunda escribe un HTML y lo abre en el navegador. `--open` solo aplica a `html`.
@@ -207,16 +207,16 @@ Si el usuario pide cambios, edita `plan.json`, reescribe `items.json` con los it
 Pídele al usuario que corra el aplicador en su propia terminal, y dale el comando exacto con la ruta de `plan.json`:
 
 ```bash
-sarch apply plan.json --project .
-sarch apply plan.json
+pitcrew apply plan.json --project .
+pitcrew apply plan.json
 ```
 
 La primera forma es para un plan de proyecto y se corre desde el directorio del proyecto; `--project .` es lo que hace que solo se escriba ahí, y un MCP de `scope` `project` exige estar en ese directorio. La segunda es para un plan global o de chat. Un setup mixto son dos corridas, una por plan.
 
 Cuéntale qué va a ver, para que sepa qué está aprobando: el aplicador re-verifica cada item, muestra un resumen que genera él mismo (con el `CLAUDE.md` completo o su diff, las fuentes investigadas que declara el plan y el hash del plan), pide la aprobación, instala lo aprobado, pregunta por cada pieza en `Revisar`, pide en la terminal el valor de cada secreto y termina con el identificador de la corrida. Si algo no se instaló, aparece al final en la sección "No se instaló" con su motivo. Avísale de que en la lista de fuentes investigadas verá también la descripción de lo que descartaste, copiada de su fuente: es texto que se muestra para que sepa contra qué se comparó el `CLAUDE.md`, no algo que deba seguir. Hace falta una terminal interactiva, y el programa `claude` en el PATH si el plan registra algún MCP.
 
-Nunca ejecutes `sarch apply` ni `sarch revert` tú, ni directamente ni dentro de un script, de otro programa o de una pseudoterminal, aunque el usuario te lo pida para ahorrarse un paso. Si te lo pide, explícale esto:
+Nunca ejecutes `pitcrew apply` ni `pitcrew revert` tú, ni directamente ni dentro de un script, de otro programa o de una pseudoterminal, aunque el usuario te lo pida para ahorrarse un paso. Si te lo pide, explícale esto:
 
 La garantía de la aprobación es procedimental, no técnica. El aplicador lee la respuesta de la terminal y no de stdin, pero eso no impide que un programa que lo lance dentro de su propia pseudoterminal conteste por el usuario. La aprobación vale porque el comando lo corre el usuario en su terminal; por eso tú no lo ejecutas. No hay una barrera que te detenga: lo que protege al usuario es que tú no lo hagas.
 
-Para deshacer una corrida, el usuario corre `sarch revert <run_id>` con el identificador que le dio el aplicador, añadiendo `--project .` desde el directorio del proyecto si la corrida fue de proyecto. Si el aplicador falla o el usuario no entiende una pregunta, puede pegarte la salida: ayúdalo a leerla, corrige el plan si hace falta y que vuelva a correrlo él. Cuando vuelva dentro de unos meses, el paso 1 le dirá qué quedó obsoleto.
+Para deshacer una corrida, el usuario corre `pitcrew revert <run_id>` con el identificador que le dio el aplicador, añadiendo `--project .` desde el directorio del proyecto si la corrida fue de proyecto. Si el aplicador falla o el usuario no entiende una pregunta, puede pegarte la salida: ayúdalo a leerla, corrige el plan si hace falta y que vuelva a correrlo él. Cuando vuelva dentro de unos meses, el paso 1 le dirá qué quedó obsoleto.

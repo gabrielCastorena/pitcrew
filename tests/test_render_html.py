@@ -9,8 +9,8 @@ from typing import Any
 
 import pytest
 
-from setup_architect.cli import main
-from setup_architect.models import (
+from pitcrew.cli import main
+from pitcrew.models import (
     AddMcp,
     CopySkill,
     Flag,
@@ -20,10 +20,10 @@ from setup_architect.models import (
     SetEnv,
     WriteFile,
 )
-from setup_architect.plan_io import card_to_dict
-from setup_architect.render.html import render_html
-from setup_architect.render.layers import Layer
-from setup_architect.render.text import render_text
+from pitcrew.plan_io import card_to_dict
+from pitcrew.render.html import render_html
+from pitcrew.render.layers import Layer
+from pitcrew.render.text import render_text
 from test_render_text import CARDS, PLAN, candidate, card, write_inputs
 
 HOSTILE = '"><script>alert(1)</script><img src=x onerror=alert(1)>'

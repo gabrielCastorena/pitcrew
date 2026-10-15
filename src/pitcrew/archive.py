@@ -54,7 +54,7 @@ def safe_extract(archive: bytes, dest: Path) -> None:
         created_dest = not dest.exists()
         try:
             dest.mkdir(parents=True, exist_ok=True)
-            staging = Path(tempfile.mkdtemp(prefix=".sarch-extract-", dir=dest))
+            staging = Path(tempfile.mkdtemp(prefix=".pitcrew-extract-", dir=dest))
         except OSError as exc:
             raise ArchiveError(
                 f"no se pudo preparar el destino: {exc.strerror}"

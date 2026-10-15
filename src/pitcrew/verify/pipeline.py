@@ -20,9 +20,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable
 
-from setup_architect.archive import ArchiveError, safe_extract
-from setup_architect.config import Config
-from setup_architect.models import (
+from pitcrew.archive import ArchiveError, safe_extract
+from pitcrew.config import Config
+from pitcrew.models import (
     Candidate,
     CopySkill,
     Flag,
@@ -31,7 +31,7 @@ from setup_architect.models import (
     RepoFacts,
     TrustCard,
 )
-from setup_architect.verify.github import (
+from pitcrew.verify.github import (
     Fetcher,
     FetchError,
     VerificationError,
@@ -40,8 +40,8 @@ from setup_architect.verify.github import (
     parse_repo_url,
     sha_in_default_branch,
 )
-from setup_architect.verify.rubric import evaluate
-from setup_architect.verify.skill_scan import scan_skill_dir
+from pitcrew.verify.rubric import evaluate
+from pitcrew.verify.skill_scan import scan_skill_dir
 
 ArchiveFetcher = Callable[[str, str, str], bytes]
 
@@ -81,7 +81,7 @@ def _run_quiet(argv: list[str]) -> int:
     """Ejecuta `argv` sin heredar la E/S y devuelve su código de salida.
 
     La salida de `claude mcp get` puede incluir valores de entorno de un
-    servidor existente: no debe llegar al stdout de `sarch`, que lee el LLM
+    servidor existente: no debe llegar al stdout de `pitcrew`, que lee el LLM
     que lo lanzó.
     """
     return subprocess.run(

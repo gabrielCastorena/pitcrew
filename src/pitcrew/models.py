@@ -1,4 +1,4 @@
-"""Modelos de datos del plan de setup-architect.
+"""Modelos de datos del plan de Pitcrew.
 
 Estas dataclasses son el contrato entre todas las piezas del sistema:
 el verificador produce `RepoFacts`/`TrustCard`, la skill orquestadora

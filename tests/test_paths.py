@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from setup_architect.apply.paths import PathError, resolve_target
+from pitcrew.apply.paths import PathError, resolve_target
 
 
 @pytest.fixture
@@ -357,7 +357,7 @@ def test_non_ascii_names_still_allowed(home: Path, proj: Path) -> None:
 
 
 def test_forbidden_component_is_public() -> None:
-    from setup_architect.apply.paths import forbidden_component
+    from pitcrew.apply.paths import forbidden_component
 
     assert forbidden_component(("a", "HOOKS", "x.sh")) == "HOOKS"
     assert forbidden_component(("a", ".MCP.json")) == ".MCP.json"

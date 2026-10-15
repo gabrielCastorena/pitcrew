@@ -16,8 +16,8 @@ import re
 from datetime import datetime
 from pathlib import PurePosixPath
 
-from setup_architect.config import Config
-from setup_architect.models import (
+from pitcrew.config import Config
+from pitcrew.models import (
     AddMcp,
     Candidate,
     Flag,
@@ -27,8 +27,8 @@ from setup_architect.models import (
     TrustCard,
     WriteFile,
 )
-from setup_architect.skill_paths import in_skills_dir
-from setup_architect.verify.typosquat import detect_typosquat
+from pitcrew.skill_paths import in_skills_dir
+from pitcrew.verify.typosquat import detect_typosquat
 
 _SHA_RE = re.compile(r"^[0-9a-f]{40}$", re.IGNORECASE)
 _UNSUPPORTED_SOURCE_DETAIL = "la fuente no es un repo de GitHub soportado"

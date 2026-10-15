@@ -10,8 +10,8 @@ from typing import Any
 
 import pytest
 
-from setup_architect.models import AddMcp, Flag, Level, PlanItem, ResearchedSource, TrustCard
-from setup_architect.plan_io import (
+from pitcrew.models import AddMcp, Flag, Level, PlanItem, ResearchedSource, TrustCard
+from pitcrew.plan_io import (
     PlanError,
     card_from_dict,
     card_to_dict,

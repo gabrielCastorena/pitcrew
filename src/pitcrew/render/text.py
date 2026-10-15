@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import unicodedata
 
-from setup_architect.models import Level, Plan, TrustCard
-from setup_architect.render.layers import Layer, RenderItem, group_by_layer, permissions_for
+from pitcrew.models import Level, Plan, TrustCard
+from pitcrew.render.layers import Layer, RenderItem, group_by_layer, permissions_for
 
 _ALLOWED_CONTROL = {"\t"}
 _NAMED_ESCAPES = {"\n": "\\n", "\r": "\\r"}

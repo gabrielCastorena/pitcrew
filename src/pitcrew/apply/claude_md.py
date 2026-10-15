@@ -11,7 +11,7 @@ from __future__ import annotations
 import re
 import unicodedata
 
-from setup_architect.config import Config
+from pitcrew.config import Config
 
 _URL = re.compile(r"https?://|www\.|[a-z][a-z0-9+.\-]*://", re.IGNORECASE)
 _WORD = re.compile(r"\w+")

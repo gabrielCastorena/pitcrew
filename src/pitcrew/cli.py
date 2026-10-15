@@ -1,4 +1,4 @@
-"""CLI `sarch`.
+"""CLI `pitcrew`.
 
 `main` arma un `argparse.ArgumentParser` con subparsers y despacha a
 una función `_cmd_<subcomando>` por cada uno.
@@ -19,19 +19,19 @@ import webbrowser
 from pathlib import Path
 from typing import Any, NoReturn
 
-from setup_architect.apply.runner import run_apply, run_audit, run_revert
-from setup_architect.config import Config, ConfigError, load_config
-from setup_architect.models import Flag, Level, PlanItem, TrustCard
-from setup_architect.plan_io import (
+from pitcrew.apply.runner import run_apply, run_audit, run_revert
+from pitcrew.config import Config, ConfigError, load_config
+from pitcrew.models import Flag, Level, PlanItem, TrustCard
+from pitcrew.plan_io import (
     PlanError,
     card_from_dict,
     card_to_dict,
     load_plan,
     parse_item,
 )
-from setup_architect.render.html import render_html
-from setup_architect.render.text import render_text
-from setup_architect.verify.pipeline import Deps, default_deps, verify_item
+from pitcrew.render.html import render_html
+from pitcrew.render.text import render_text
+from pitcrew.verify.pipeline import Deps, default_deps, verify_item
 
 _DEFAULT_CONFIG_DIR = Path(__file__).resolve().parents[2] / "config"
 _LEVEL_ORDER = [Level.VERIFICADO, Level.CONFIABLE, Level.REVISAR, Level.BLOQUEADO]
@@ -58,12 +58,12 @@ def main(argv: list[str] | None = None, deps: Deps | None = None) -> int:
         args = parser.parse_args(argv)
     except _UsageError:
         print(
-            "sarch: argumentos inválidos. "
-            "Uso: sarch verify ITEMS [-o SALIDA] [--config DIR]; "
-            "sarch render PLAN --cards CARDS [--format text|html] [-o SALIDA] [--open]; "
-            "sarch apply PLAN [--project DIR]; "
-            "sarch revert RUN_ID [--project DIR]; "
-            "sarch audit [--project DIR] [--config DIR]; "
+            "pitcrew: argumentos inválidos. "
+            "Uso: pitcrew verify ITEMS [-o SALIDA] [--config DIR]; "
+            "pitcrew render PLAN --cards CARDS [--format text|html] [-o SALIDA] [--open]; "
+            "pitcrew apply PLAN [--project DIR]; "
+            "pitcrew revert RUN_ID [--project DIR]; "
+            "pitcrew audit [--project DIR] [--config DIR]; "
             "usa --help para más información.",
             file=sys.stderr,
         )
@@ -80,7 +80,7 @@ def main(argv: list[str] | None = None, deps: Deps | None = None) -> int:
 
 
 def _build_parser() -> argparse.ArgumentParser:
-    parser = _Parser(prog="sarch")
+    parser = _Parser(prog="pitcrew")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     verify_parser = subparsers.add_parser(

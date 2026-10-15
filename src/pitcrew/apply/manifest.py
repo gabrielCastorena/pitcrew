@@ -29,7 +29,7 @@ archivo que cualquiera pudo editar, así que NO confía en él: valida cada
 `Undo` y, ante cualquier duda, no borra, no escribe ni ejecuta nada, deja
 el paso con su estado y explica por qué. Solo borra o restaura dentro del
 árbol que posee el manifiesto: el `{ancla}` de
-`{ancla}/.claude/setup-architect/manifest.json`.
+`{ancla}/.claude/pitcrew/manifest.json`.
 """
 
 from __future__ import annotations
@@ -46,9 +46,9 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Callable, Literal
 
-from setup_architect.apply.ops import Undo
-from setup_architect.forbidden import forbidden_component
-from setup_architect.models import Level
+from pitcrew.apply.ops import Undo
+from pitcrew.forbidden import forbidden_component
+from pitcrew.models import Level
 
 _VERSION = 1
 _STATUSES = ("pending", "done", "failed", "skipped", "reverted")
@@ -58,7 +58,7 @@ _UNDO_FIELDS = ("kind", "target", "backup", "scope")
 _SCOPES = ("user", "project")
 _SKILLS = (".claude", "skills")
 _CLAUDE_MDS = (("CLAUDE.md",), (".claude", "CLAUDE.md"))
-_MANIFEST_TAIL = (".claude", "setup-architect", "manifest.json")
+_MANIFEST_TAIL = (".claude", "pitcrew", "manifest.json")
 _MCP_NAME_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{0,63}")
 _ENV_NAME_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 
@@ -90,7 +90,7 @@ _RECORD_FIELDS = tuple(field.name for field in dataclasses.fields(StepRecord))
 def manifest_path(home: Path, project: Path | None) -> Path:
     """Dónde vive el manifiesto: en el proyecto si lo hay; si no, en el HOME."""
     base = project if project is not None else home
-    return base / ".claude" / "setup-architect" / "manifest.json"
+    return base / ".claude" / "pitcrew" / "manifest.json"
 
 
 class Manifest:
@@ -269,7 +269,7 @@ def _atomic_write(path: Path, data: bytes, mode: int | None) -> None:
     enlace en vez de escribir a través de él. Si algo falla, `path` queda
     como estaba y el temporal se borra. Lanza `OSError`.
     """
-    temp = path.with_name(f".{path.name}.sarch-{secrets.token_hex(8)}.tmp")
+    temp = path.with_name(f".{path.name}.pitcrew-{secrets.token_hex(8)}.tmp")
     fd = os.open(
         str(temp),
         os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
@@ -318,7 +318,7 @@ def revert(
     inesperada), no se marca y se sigue con los demás.
 
     `restore_file` y `delete_path` solo actúan dentro del árbol que posee
-    el manifiesto: si `m.path` es `{ancla}/.claude/setup-architect/manifest.json`,
+    el manifiesto: si `m.path` es `{ancla}/.claude/pitcrew/manifest.json`,
     sobre `{ancla}/CLAUDE.md`, `{ancla}/.claude/CLAUDE.md` y lo que haya
     bajo `{ancla}/.claude/skills/`, sin pasar por ningún enlace simbólico
     desde el ancla. Un manifiesto en otra ruta no deshace pasos de archivos.
@@ -417,7 +417,7 @@ def _first_symlink(parts: tuple[str, ...], start: int) -> str | None:
 def _anchor(path: Path) -> tuple[str, ...] | None:
     """Componentes del árbol que posee el manifiesto, o `None` si no hay.
 
-    Solo vale un manifiesto en `{ancla}/.claude/setup-architect/manifest.json`,
+    Solo vale un manifiesto en `{ancla}/.claude/pitcrew/manifest.json`,
     dado como ruta absoluta y normalizada.
     """
     try:
@@ -433,7 +433,7 @@ def _require_anchor(anchor: tuple[str, ...] | None) -> tuple[str, ...]:
     if anchor is None:
         raise _Refused(
             "el manifiesto no está en una ruta absoluta de la forma "
-            "{base}/.claude/setup-architect/manifest.json; no se tocan archivos"
+            "{base}/.claude/pitcrew/manifest.json; no se tocan archivos"
         )
     return anchor
 

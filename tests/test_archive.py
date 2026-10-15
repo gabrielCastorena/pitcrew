@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from setup_architect.archive import ArchiveError, safe_extract
+from pitcrew.archive import ArchiveError, safe_extract
 
 
 def _make_tar(entries: list[tarfile.TarInfo | tuple[str, bytes]]) -> bytes:

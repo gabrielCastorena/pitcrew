@@ -11,7 +11,7 @@ from dataclasses import dataclass, replace
 from enum import StrEnum
 from pathlib import PurePosixPath
 
-from setup_architect.models import (
+from pitcrew.models import (
     AddMcp,
     CopySkill,
     Flag,
@@ -24,7 +24,7 @@ from setup_architect.models import (
     TrustCard,
     WriteFile,
 )
-from setup_architect.skill_paths import in_skills_dir
+from pitcrew.skill_paths import in_skills_dir
 
 MISSING_CARD_REASON = "sin ficha del verificador"
 BUNDLED_SCRIPT_CODE = "bundled_script"

@@ -8,8 +8,8 @@ from typing import Any
 
 import pytest
 
-from setup_architect.cli import main
-from setup_architect.models import (
+from pitcrew.cli import main
+from pitcrew.models import (
     AddMcp,
     Candidate,
     CopySkill,
@@ -22,8 +22,8 @@ from setup_architect.models import (
     TrustCard,
     WriteFile,
 )
-from setup_architect.plan_io import card_to_dict
-from setup_architect.render.layers import (
+from pitcrew.plan_io import card_to_dict
+from pitcrew.render.layers import (
     Layer,
     RenderItem,
     group_by_layer,
@@ -31,7 +31,7 @@ from setup_architect.render.layers import (
     permissions_for,
     permissions_of,
 )
-from setup_architect.render.text import render_text, safe_text
+from pitcrew.render.text import render_text, safe_text
 
 WHY = "El proyecto vive en GitHub y el flujo necesita crear PRs."
 SOURCE = "https://github.com/github/github-mcp-server"

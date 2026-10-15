@@ -19,15 +19,15 @@ from typing import Any, Callable, Iterator
 
 import pytest
 
-from setup_architect.apply import approval, runner
-from setup_architect.apply.manifest import Manifest, StepRecord, manifest_path
-from setup_architect.apply.ops import Undo
-from setup_architect.apply.runner import run_apply, run_audit, run_revert
-from setup_architect.config import Config
-from setup_architect.models import Level
-from setup_architect.plan_io import plan_hash
-from setup_architect.verify.github import FetchError
-from setup_architect.verify.pipeline import Deps
+from pitcrew.apply import approval, runner
+from pitcrew.apply.manifest import Manifest, StepRecord, manifest_path
+from pitcrew.apply.ops import Undo
+from pitcrew.apply.runner import run_apply, run_audit, run_revert
+from pitcrew.config import Config
+from pitcrew.models import Level
+from pitcrew.plan_io import plan_hash
+from pitcrew.verify.github import FetchError
+from pitcrew.verify.pipeline import Deps
 from test_approval import Hang, PtySession, wait_for
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -284,7 +284,7 @@ def test_approve_via_pty(world: World, pty: PtySession) -> None:
     assert record.at == NOW.isoformat()
     assert record.index == 0
     assert record.undo == Undo("delete_path", str(world.proj / "CLAUDE.md"), None, None)
-    wait_for(pty, f"sarch revert {record.run_id}")
+    wait_for(pty, f"pitcrew revert {record.run_id}")
     text = pty.text()
     assert f"Hash del plan: {digest}" in text
     assert f"¿Aprobar este plan? (hash {digest[:12]}) [s/N]: " in text
@@ -354,7 +354,7 @@ def test_revisar_confirmed_separately(world: World, pty: PtySession) -> None:
     assert [r.op_kind for r in skipped] == ["add_mcp", "write_file"]
     assert all(r.undo == Undo("none", "", None, None) for r in skipped)
     assert all(r.level == Level.REVISAR for r in skipped)
-    wait_for(pty, "sarch revert")
+    wait_for(pty, "pitcrew revert")
     assert "inactivo: 900 días" in pty.text()
 
 
@@ -444,7 +444,7 @@ def test_summary_and_messages_go_to_the_tty_not_stdout(
 ) -> None:
     pty.answer_on_prompt("sí", "sí")  # el plan y el CLAUDE.md
     assert run_apply(world.plan(*PLAN_ITEMS), world.deps(pty.path), CFG, world.proj) == 0
-    wait_for(pty, "sarch revert")
+    wait_for(pty, "pitcrew revert")
     captured = capsys.readouterr()
     assert captured.out == "" and captured.err == ""
 
@@ -761,7 +761,7 @@ def test_cards_are_paired_by_position_with_repeated_names(
         SQUAT: ("skipped", Level.BLOQUEADO),
         OFFICIAL: ("done", Level.REVISAR),
     }
-    wait_for(pty, "sarch revert")
+    wait_for(pty, "pitcrew revert")
     assert pty.text().count("¿Instalar gemela de todos modos?") == 1
 
 
@@ -800,7 +800,7 @@ def test_global_run_without_project(world: World, pty: PtySession) -> None:
     assert record.status == "done"
     assert record.level == Level.REVISAR
     assert not (world.proj / ".claude").exists()
-    wait_for(pty, f"sarch revert {record.run_id}")
+    wait_for(pty, f"pitcrew revert {record.run_id}")
     assert "--project" not in pty.text()
     assert pty.text().count("¿Instalar global de todos modos? [s/N]: ") == 1
 
@@ -815,7 +815,7 @@ def test_overwrite_is_backed_up_under_the_manifest_directory(world: World, pty: 
     assert record.undo.backup is not None
     assert Path(record.undo.backup).parent == backups
     assert Path(record.undo.backup).read_text(encoding="utf-8") == ORIGINAL
-    wait_for(pty, "sarch revert")
+    wait_for(pty, "pitcrew revert")
     assert "| -# Lo que ya tenía el usuario" in pty.text()
 
 
@@ -830,7 +830,7 @@ def test_manual_steps_are_printed_at_the_end(world: World, pty: PtySession) -> N
     records = world.records()
     assert [r.op_kind for r in records] == ["manual_step", "write_file"]
     assert records[0].status == "done" and records[0].undo == Undo("none", "", None, None)
-    wait_for(pty, "sarch revert")
+    wait_for(pty, "pitcrew revert")
     text = pty.text()
     assert "Pasos manuales" in text
     tail = text[text.index("Pasos manuales") :]
@@ -910,7 +910,7 @@ def test_failure_without_revert_keeps_what_was_done(world: World, pty: PtySessio
     assert world.read("CLAUDE.md") == NEW_CONTENT
     assert world.statuses() == ["done", "failed"]
     run_id = world.records()[0].run_id
-    wait_for(pty, f"sarch revert {run_id}")
+    wait_for(pty, f"pitcrew revert {run_id}")
     text = pty.text()
     # Qué se hizo y qué no.
     assert "write_file CLAUDE.md" in text[text.index("Falló") :]
@@ -998,11 +998,11 @@ def test_secret_is_not_in_manifest_nor_tty_output(
 
     assert run_apply(plan, world.deps(pty.path), CFG, world.proj) == 0
 
-    env_file = world.home / ".config" / "setup-architect" / "secrets.env"
+    env_file = world.home / ".config" / "pitcrew" / "secrets.env"
     assert env_file.read_text(encoding="utf-8") == f"export TOKEN='{SECRET}'\n"
     (add,) = world.adds()
     assert f"TOKEN={SECRET}" in add
-    wait_for(pty, "sarch revert")
+    wait_for(pty, "pitcrew revert")
     text = pty.text()
     # Un mismo nombre se pide una sola vez aunque lo usen dos operaciones.
     assert text.count("Valor para TOKEN") == 1
@@ -1064,7 +1064,7 @@ def test_run_revert_removes_the_secret_from_the_same_env_file(
     pty.answer_on_prompt("sí", SECRET)
     plan = world.plan(item("con-secreto", OFFICIAL, {"op": "set_env", "name": "TOKEN"}))
     assert run_apply(plan, world.deps(pty.path), CFG, world.proj) == 0
-    env_file = world.home / ".config" / "setup-architect" / "secrets.env"
+    env_file = world.home / ".config" / "pitcrew" / "secrets.env"
     assert SECRET in env_file.read_text(encoding="utf-8")
 
     assert run_revert(world.records()[0].run_id, world.deps("/nonexistent"), world.proj) == 0
@@ -1212,7 +1212,7 @@ CONFIG_DIR = Path(__file__).resolve().parents[1] / "config"
 
 
 def run_cli(argv: list[str], deps: Deps, capsys: pytest.CaptureFixture[str]) -> str:
-    from setup_architect.cli import main
+    from pitcrew.cli import main
 
     capsys.readouterr()
     assert main(argv, deps) == 0
@@ -1220,7 +1220,7 @@ def run_cli(argv: list[str], deps: Deps, capsys: pytest.CaptureFixture[str]) -> 
 
 
 def test_cli_apply_runs_the_plan(world: World, pty: PtySession) -> None:
-    from setup_architect.cli import main
+    from pitcrew.cli import main
 
     pty.answer_on_prompt("sí")
     # Un `copy_skill` oficial y sano: va en el bloque (un `write_file` de
@@ -1235,7 +1235,7 @@ def test_cli_apply_runs_the_plan(world: World, pty: PtySession) -> None:
 
 
 def test_cli_apply_without_project_is_a_global_run(world: World, pty: PtySession) -> None:
-    from setup_architect.cli import main
+    from pitcrew.cli import main
 
     pty.answer_on_prompt("sí", "sí")  # el plan y el CLAUDE.md global
     plan = world.plan(item("global", OFFICIAL, write_file("~/.claude/CLAUDE.md", "# global\n")))
@@ -1244,7 +1244,7 @@ def test_cli_apply_without_project_is_a_global_run(world: World, pty: PtySession
 
 
 def test_cli_apply_without_tty_returns_1(world: World, capsys: pytest.CaptureFixture[str]) -> None:
-    from setup_architect.cli import main
+    from pitcrew.cli import main
 
     plan = world.plan(*PLAN_ITEMS)
     argv = ["apply", str(plan), "--project", str(world.proj)]
@@ -1258,7 +1258,7 @@ def test_cli_apply_invalid_config_returns_2(
 ) -> None:
     # `apply` no admite `--config`; la única configuración
     # que puede fallar es la del paquete.
-    from setup_architect import cli
+    from pitcrew import cli
 
     monkeypatch.setattr(cli, "_DEFAULT_CONFIG_DIR", world.root / "no-hay")
     plan = world.plan(*PLAN_ITEMS)
@@ -1275,7 +1275,7 @@ def test_cli_apply_invalid_config_returns_2(
 def test_cli_invalid_arguments_return_2(
     world: World, argv: list[str], capsys: pytest.CaptureFixture[str]
 ) -> None:
-    from setup_architect.cli import main
+    from pitcrew.cli import main
 
     assert main(argv, world.deps("/nonexistent")) == 2
     err = capsys.readouterr().err
@@ -1305,7 +1305,7 @@ def test_cli_revert_unknown_run(world: World, capsys: pytest.CaptureFixture[str]
 def test_cli_revert_unreadable_manifest_returns_1(
     world: World, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    from setup_architect.cli import main
+    from pitcrew.cli import main
 
     manifest = world.manifest_file()
     manifest.parent.mkdir(parents=True)
@@ -1330,7 +1330,7 @@ def test_cli_audit_without_manifest(world: World, capsys: pytest.CaptureFixture[
 
 @pytest.mark.parametrize("argv", [["revert", "x", "--project", "a\x00b"], ["audit", "--project", "a\x00b"], ["apply", "p\x00", "--project", "a\x00b"]])
 def test_cli_nul_in_paths_never_escapes(world: World, argv: list[str], capsys: pytest.CaptureFixture[str]) -> None:
-    from setup_architect.cli import main
+    from pitcrew.cli import main
 
     if argv[0] == "audit":
         argv = [*argv, "--config", str(CONFIG_DIR)]
@@ -1357,7 +1357,7 @@ def test_unverified_mcp_package_is_asked_separately_and_skipped_on_no(
     assert world.calls == []
     (record,) = [r for r in world.records() if r.candidate == "github-mcp"]
     assert record.level == Level.REVISAR
-    wait_for(pty, "sarch revert")
+    wait_for(pty, "pitcrew revert")
     text = pty.text()
     reason = "el paquete del MCP no se verifica contra la fuente: npx -y some-other-package@1.0.0"
     assert reason in text[: text.index("¿Aprobar este plan?")]
@@ -1406,7 +1406,7 @@ def test_unverifiable_item_is_never_asked_nor_installed(world: World, pty: PtySe
     skipped = [r for r in world.records() if r.candidate == "caida"]
     assert [r.op_kind for r in skipped] == ["copy_skill", "add_mcp"]
     assert all(r.level == Level.REVISAR and r.ref is None for r in skipped)
-    wait_for(pty, "sarch revert")
+    wait_for(pty, "pitcrew revert")
     text = pty.text()
     assert "no se instalará (no se pudo verificar)" in text
     assert "no se pudo verificar; vuelve a intentarlo más tarde" in text
@@ -1578,7 +1578,7 @@ def test_blocked_items_are_recorded_even_when_the_run_fails(world: World, pty: P
 def test_manifest_error_while_skipping_reports_and_offers_revert(
     world: World, pty: PtySession, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from setup_architect.apply.manifest import ManifestError
+    from pitcrew.apply.manifest import ManifestError
 
     (world.proj / "CLAUDE.md").write_text(ORIGINAL, encoding="utf-8")
     real_begin = Manifest.begin
@@ -1623,7 +1623,7 @@ def test_error_outside_a_step_without_revert_shows_the_command(
     assert run_apply(plan, world.deps(pty.path), CFG, world.proj) == 1
     assert world.statuses() == ["done"]
     run_id = world.records()[0].run_id
-    wait_for(pty, f"sarch revert {run_id}")
+    wait_for(pty, f"pitcrew revert {run_id}")
     assert "RuntimeError" in pty.text() and "detalle-interno" not in pty.text()
 
 
@@ -1642,7 +1642,7 @@ def test_unreadable_manifest_mid_run_says_so_and_shows_the_command(
         item("dudosa", STALE, write_file(".claude/skills/d/SKILL.md", "# d\n")),
     )
     assert run_apply(plan, world.deps(pty.path), CFG, world.proj) == 1
-    wait_for(pty, "sarch revert")
+    wait_for(pty, "pitcrew revert")
     assert "manifiesto" in pty.text()
     assert "¿Revertir esta corrida?" not in pty.text()
 
@@ -1729,7 +1729,7 @@ def test_archive_identical_to_the_verified_one_is_installed(world: World, pty: P
     assert (dest / "SKILL.md").is_file()
     assert not (dest / "scripts").exists()
     assert world.records()[0].level == Level.CONFIABLE
-    wait_for(pty, "sarch revert")
+    wait_for(pty, "pitcrew revert")
     assert "cambió desde la verificación" not in pty.text()
 
 
@@ -1843,7 +1843,7 @@ def test_skipped_items_are_listed_at_the_end_with_their_reason(world: World, pty
     assert not any("contexto" in ln for ln in lines)
     # Es lo último que se dice: después del comando para revertir.
     text = pty.text()
-    assert text.index("sarch revert") < text.index("No se instaló:")
+    assert text.index("pitcrew revert") < text.index("No se instaló:")
 
 
 def test_clean_run_has_no_not_installed_section(world: World, pty: PtySession) -> None:
@@ -1852,7 +1852,7 @@ def test_clean_run_has_no_not_installed_section(world: World, pty: PtySession) -
     plan = world.plan(item("contexto", OFFICIAL, write_file()), item("dudosa", STALE, MANUAL))
     assert run_apply(plan, world.deps(pty.path), CFG, world.proj) == 0
     assert world.statuses() == ["done", "done"]
-    wait_for(pty, "sarch revert")
+    wait_for(pty, "pitcrew revert")
     settle(0.2)
     assert "No se instaló" not in pty.text()
 
@@ -1904,7 +1904,7 @@ def test_unsupported_source_question_says_nothing_was_verified(
     assert "¿Instalar dudosa de todos modos?" in stale
     assert "Nada de este item se verificó" not in stale
     # El resumen que se aprueba lo dice también, y solo de ese item.
-    wait_for(pty, "sarch revert")
+    wait_for(pty, "pitcrew revert")
     summary = pty.text()
     assert summary.count(NOTHING_VERIFIED) == 1
 
@@ -1941,7 +1941,7 @@ def test_skill_write_file_is_not_in_the_block_and_is_asked_separately(
         ("copiada", "done", Level.VERIFICADO),
         ("skill", "done", Level.REVISAR),
     ]
-    wait_for(pty, "sarch revert")
+    wait_for(pty, "pitcrew revert")
     assert (
         "el contenido escrito bajo .claude/skills/ no se verifica contra la fuente: "
         ".claude/skills/x/SKILL.md"
@@ -2040,7 +2040,7 @@ def test_mcp_get_that_raises_fails_without_adding(
 def test_cli_apply_rejects_config_option(
     world: World, extra: list[str], capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from setup_architect import cli
+    from pitcrew import cli
 
     def never(*args: object) -> int:
         raise AssertionError("no debe ejecutarse nada")
@@ -2060,7 +2060,7 @@ def test_cli_apply_rejects_config_option(
 
     captured = capsys.readouterr()
     assert "argumentos inválidos" in captured.err
-    assert "sarch apply PLAN [--project DIR];" in captured.err
+    assert "pitcrew apply PLAN [--project DIR];" in captured.err
     assert captured.out == ""
     assert world.calls == [] and world.snapshot() == before
 
@@ -2068,8 +2068,8 @@ def test_cli_apply_rejects_config_option(
 def test_cli_apply_always_uses_the_package_configuration(
     world: World, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from setup_architect import cli
-    from setup_architect.config import load_config
+    from pitcrew import cli
+    from pitcrew.config import load_config
 
     seen: list[Config] = []
 
@@ -2084,7 +2084,7 @@ def test_cli_apply_always_uses_the_package_configuration(
 
 
 def test_cli_audit_still_accepts_config(world: World, capsys: pytest.CaptureFixture[str]) -> None:
-    from setup_architect.cli import main
+    from pitcrew.cli import main
 
     argv = ["audit", "--project", str(world.proj), "--config", str(world.root / "no-hay")]
     assert main(argv, world.deps("/nonexistent")) == 2
@@ -2095,11 +2095,11 @@ def test_cli_audit_still_accepts_config(world: World, capsys: pytest.CaptureFixt
 
 
 def _link_manifest_component(world: World, base: Path, component: str, dangling: bool) -> Path:
-    """Convierte un componente de `{base}/.claude/setup-architect/backups` en un enlace."""
+    """Convierte un componente de `{base}/.claude/pitcrew/backups` en un enlace."""
     outside = world.root / "afuera"
     if not dangling:
         outside.mkdir()
-    chain = [".claude", "setup-architect", "backups"]
+    chain = [".claude", "pitcrew", "backups"]
     link = base.joinpath(*chain[: chain.index(component) + 1])
     link.parent.mkdir(parents=True, exist_ok=True)
     link.symlink_to(outside, target_is_directory=True)
@@ -2108,7 +2108,7 @@ def _link_manifest_component(world: World, base: Path, component: str, dangling:
 
 @pytest.mark.parametrize("dangling", [False, True])
 @pytest.mark.parametrize("with_project", [True, False])
-@pytest.mark.parametrize("component", [".claude", "setup-architect", "backups"])
+@pytest.mark.parametrize("component", [".claude", "pitcrew", "backups"])
 def test_symlinked_manifest_directory_aborts_before_tty(
     world: World,
     pty: PtySession,
@@ -2162,7 +2162,7 @@ def test_symlinked_home_without_project_aborts_before_tty(
 
 
 def test_real_manifest_directories_are_accepted(world: World, pty: PtySession) -> None:
-    (world.proj / ".claude" / "setup-architect" / "backups").mkdir(parents=True)
+    (world.proj / ".claude" / "pitcrew" / "backups").mkdir(parents=True)
     pty.answer_on_prompt("sí")
     plan = world.plan(item("contexto", OFFICIAL, MANUAL))
     assert run_apply(plan, world.deps(pty.path), CFG, world.proj) == 0
@@ -2186,7 +2186,7 @@ def test_http_mcp_env_names_are_not_asked_and_the_manifest_says_so(world: World,
     assert world.adds() == [
         ["claude", "mcp", "add", "--transport", "http", "--scope", "user", "remoto", "https://mcp.example.com/x"]
     ]
-    wait_for(pty, "sarch revert")
+    wait_for(pty, "pitcrew revert")
     text = pty.text()
     assert note in text[: text.index("¿Aprobar este plan?")]
     assert "Valor para" not in text
@@ -2425,7 +2425,7 @@ def test_claude_md_is_not_written_in_the_block_and_is_asked_separately(
         ("contexto", "write_file", "done", Level.REVISAR),
     ]
     assert world.read("CLAUDE.md") == NEW_CONTENT
-    wait_for(pty, "sarch revert")
+    wait_for(pty, "pitcrew revert")
     text = pty.text()
     approve = text.index("Corrida ")
     assert "contexto  [Revisar] - se confirmará aparte" in text[:approve]
@@ -2469,7 +2469,7 @@ def test_claude_md_confirmed_at_its_question_is_written(
         ("skill", "done", block_level),
         ("contexto", "done", Level.REVISAR),
     ]
-    wait_for(pty, "sarch revert")
+    wait_for(pty, "pitcrew revert")
     settle(0.2)
     text = pty.text()
     assert text.count("¿Instalar contexto de todos modos? [s/N]: ") == 1
@@ -2542,7 +2542,7 @@ def test_no_claude_md_warning_when_everything_was_installed(world: World, pty: P
     pty.answer_on_prompt("sí", "sí", "sí")
     plan = world.plan(item("contexto", OFFICIAL, write_file()), item("dudosa", STALE, MANUAL))
     assert run_apply(plan, world.deps(pty.path), CFG, world.proj) == 0
-    wait_for(pty, "sarch revert")
+    wait_for(pty, "pitcrew revert")
     settle(0.2)
     assert CLAUDE_MD_STALE not in pty.text()
 

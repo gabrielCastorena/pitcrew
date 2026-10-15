@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from setup_architect.config import Config, ConfigError, load_config
-from setup_architect.models import (
+from pitcrew.config import Config, ConfigError, load_config
+from pitcrew.models import (
     AddMcp,
     Candidate,
     CopySkill,
@@ -20,7 +20,7 @@ from setup_architect.models import (
     TrustCard,
     WriteFile,
 )
-from setup_architect.verify.rubric import evaluate
+from pitcrew.verify.rubric import evaluate
 
 NOW = datetime(2026, 10, 5, tzinfo=UTC)
 
@@ -691,9 +691,9 @@ def test_veto_beats_skill_write_file() -> None:
 
 
 def test_rubric_and_render_share_one_skills_dir_definition() -> None:
-    from setup_architect import skill_paths
-    from setup_architect.render import layers
-    from setup_architect.verify import rubric
+    from pitcrew import skill_paths
+    from pitcrew.render import layers
+    from pitcrew.verify import rubric
 
     assert layers.in_skills_dir is skill_paths.in_skills_dir
     assert rubric.in_skills_dir is skill_paths.in_skills_dir
@@ -707,8 +707,8 @@ def test_rubric_does_not_depend_on_render_nor_apply() -> None:
     import sys
 
     code = (
-        "import sys; import setup_architect.verify.rubric; "
-        "sys.exit(any(m.startswith(('setup_architect.render', 'setup_architect.apply')) "
+        "import sys; import pitcrew.verify.rubric; "
+        "sys.exit(any(m.startswith(('pitcrew.render', 'pitcrew.apply')) "
         "for m in sys.modules))"
     )
     src = Path(__file__).parent.parent / "src"

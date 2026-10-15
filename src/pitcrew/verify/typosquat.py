@@ -9,7 +9,7 @@ otro dueño es la señal clásica de typosquatting: alguien publica
 
 from __future__ import annotations
 
-from setup_architect.models import Flag
+from pitcrew.models import Flag
 
 
 def levenshtein(a: str, b: str) -> int:

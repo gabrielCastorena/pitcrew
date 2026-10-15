@@ -1,4 +1,4 @@
-"""Corrida del aplicador: `sarch apply`, `sarch revert` y `sarch audit`.
+"""Corrida del aplicador: `pitcrew apply`, `pitcrew revert` y `pitcrew audit`.
 
 `run_apply` es donde un plan armado por un LLM a partir de texto de
 internet se convierte en algo instalado, así que no confía en él: lee sus
@@ -9,7 +9,7 @@ escribe ni se ejecuta nada, y ante cualquier duda o error la corrida se
 aborta (fail closed).
 
 Durante la ejecución cada paso se registra en el manifiesto antes
-(`pending`) y después (`done` o `failed`), para que `sarch revert` pueda
+(`pending`) y después (`done` o `failed`), para que `pitcrew revert` pueda
 deshacer la corrida aunque el proceso muera a la mitad.
 """
 
@@ -28,16 +28,16 @@ from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
 from typing import TextIO
 
-from setup_architect.apply import approval
-from setup_architect.apply.claude_md import validate_claude_md
-from setup_architect.apply.manifest import (
+from pitcrew.apply import approval
+from pitcrew.apply.claude_md import validate_claude_md
+from pitcrew.apply.manifest import (
     Manifest,
     ManifestError,
     StepRecord,
     manifest_path,
     revert,
 )
-from setup_architect.apply.ops import (
+from pitcrew.apply.ops import (
     ApplyContext,
     OpError,
     Undo,
@@ -45,8 +45,8 @@ from setup_architect.apply.ops import (
     execute,
     prepare,
 )
-from setup_architect.config import Config
-from setup_architect.models import (
+from pitcrew.config import Config
+from pitcrew.models import (
     AddMcp,
     CopySkill,
     Level,
@@ -58,15 +58,15 @@ from setup_architect.models import (
     TrustCard,
     WriteFile,
 )
-from setup_architect.plan_io import PlanError, load_plan, plan_hash
-from setup_architect.render.text import safe_text
-from setup_architect.verify.github import (
+from pitcrew.plan_io import PlanError, load_plan, plan_hash
+from pitcrew.render.text import safe_text
+from pitcrew.verify.github import (
     FetchError,
     VerificationError,
     fetch_repo_facts,
     parse_repo_url,
 )
-from setup_architect.verify.pipeline import Deps, verify_item
+from pitcrew.verify.pipeline import Deps, verify_item
 
 _SHA_RE = re.compile(r"[0-9a-fA-F]{40}")
 _BLOCK_LEVELS = (Level.VERIFICADO, Level.CONFIABLE)
@@ -144,11 +144,11 @@ def _absolute(path: Path) -> Path:
 
 
 def _env_file(home: Path) -> Path:
-    return home / ".config" / "setup-architect" / "secrets.env"
+    return home / ".config" / "pitcrew" / "secrets.env"
 
 
 def _revert_command(run_id: str, project: Path | None) -> str:
-    command = f"sarch revert {run_id}"
+    command = f"pitcrew revert {run_id}"
     if project is not None:
         command += f" --project {shlex.quote(str(project))}"
     return safe_text(command)
@@ -167,7 +167,7 @@ def _same_directory(a: str | Path, b: str | Path) -> bool:
     return os.path.realpath(a) == os.path.realpath(b)
 
 
-# --- sarch apply ------------------------------------------------------------
+# --- pitcrew apply ----------------------------------------------------------
 
 
 def run_apply(plan_path: Path, deps: Deps, config: Config, project: Path | None) -> int:
@@ -177,7 +177,7 @@ def run_apply(plan_path: Path, deps: Deps, config: Config, project: Path | None)
     cualquier error (también una excepción inesperada, de la que solo se
     nombra el tipo) aborta la corrida con código 1. `KeyboardInterrupt`
     nunca se captura: a mitad de un paso lo deja `pending` en el
-    manifiesto, y `sarch revert` lo deshace.
+    manifiesto, y `pitcrew revert` lo deshace.
 
     Termine bien o mal, lo último que se dice es qué items no se
     instalaron y por qué (`Bloqueado`, sin verificar o rechazados).
@@ -338,12 +338,12 @@ def _check_manifest_dir(base: Path) -> None:
     """Ningún componente del directorio del manifiesto puede ser un enlace.
 
     Recorre con `lstat` lo que ya exista de `base` (incluida),
-    `{base}/.claude`, `{base}/.claude/setup-architect` y su `backups/`: el
+    `{base}/.claude`, `{base}/.claude/pitcrew` y su `backups/`: el
     manifiesto y los respaldos se escribirían a través del enlace, fuera
     del árbol que `revert` acepta deshacer. No crea nada.
     """
     current = base
-    for part in ("", ".claude", "setup-architect", "backups"):
+    for part in ("", ".claude", "pitcrew", "backups"):
         if part:
             current = current / part
         try:
@@ -449,7 +449,7 @@ def _prevalidate_op(
                 raise OpError(f"el servidor MCP {op.name!r} pide scope project y no hay proyecto")
             if not _same_directory(os.getcwd(), ctx.project):
                 raise OpError(
-                    f"el servidor MCP {op.name!r} pide scope project: ejecuta sarch "
+                    f"el servidor MCP {op.name!r} pide scope project: ejecuta pitcrew "
                     "desde el directorio del proyecto"
                 )
         prepare(op, ctx)  # sin efectos para add_mcp: solo valida
@@ -708,7 +708,7 @@ def _offer_revert(run: _Run) -> int:
     return 1
 
 
-# --- sarch revert -----------------------------------------------------------
+# --- pitcrew revert ---------------------------------------------------------
 
 
 def run_revert(run_id: str, deps: Deps, project: Path | None) -> int:
@@ -736,7 +736,7 @@ def run_revert(run_id: str, deps: Deps, project: Path | None) -> int:
         if project_mcp and (project is None or not _same_directory(os.getcwd(), project)):
             print(
                 "la corrida registró un servidor MCP de alcance proyecto: ejecuta "
-                "sarch revert desde el directorio del proyecto (con --project); "
+                "pitcrew revert desde el directorio del proyecto (con --project); "
                 "no se revirtió nada",
                 file=sys.stderr,
             )
@@ -758,7 +758,7 @@ def run_revert(run_id: str, deps: Deps, project: Path | None) -> int:
     return 1 if left else 0
 
 
-# --- sarch audit ------------------------------------------------------------
+# --- pitcrew audit ----------------------------------------------------------
 
 
 def run_audit(deps: Deps, config: Config, project: Path | None) -> int:

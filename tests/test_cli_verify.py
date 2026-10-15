@@ -1,4 +1,4 @@
-"""Tests del pipeline del verificador y de `sarch verify`.
+"""Tests del pipeline del verificador y de `pitcrew verify`.
 
 Cubre `verify/pipeline.py` (`verify_item`, `Deps`, `default_deps`) y
 `cli.py` (`main`). Todas las respuestas de GitHub y los tar.gz de
@@ -17,11 +17,11 @@ from typing import Any
 
 import pytest
 
-from setup_architect.cli import main
-from setup_architect.config import Config
-from setup_architect.models import Candidate, CopySkill, Level, PlanItem
-from setup_architect.verify.github import Fetcher, FetchError
-from setup_architect.verify.pipeline import ArchiveFetcher, Deps, default_deps, verify_item
+from pitcrew.cli import main
+from pitcrew.config import Config
+from pitcrew.models import Candidate, CopySkill, Level, PlanItem
+from pitcrew.verify.github import Fetcher, FetchError
+from pitcrew.verify.pipeline import ArchiveFetcher, Deps, default_deps, verify_item
 
 NOW = datetime(2026, 10, 5, tzinfo=UTC)
 _LEVEL_ORDER = ["Verificado", "Confiable", "Revisar", "Bloqueado"]
@@ -742,11 +742,11 @@ def test_default_run_cmd_does_not_inherit_stdio(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     # La salida de `claude mcp get` puede traer valores de entorno de un
-    # servidor existente: no debe llegar al stdout de sarch, que lee el LLM.
+    # servidor existente: no debe llegar al stdout de pitcrew, que lee el LLM.
     import subprocess
     import types
 
-    from setup_architect.verify import pipeline
+    from pitcrew.verify import pipeline
 
     seen: list[tuple[tuple[Any, ...], dict[str, Any]]] = []
 
@@ -829,7 +829,7 @@ def test_verify_item_survives_dropped_connection_during_archive_download(
     # Integración de extremo a extremo con el `fetch_archive` real de
     # `default_deps()` (urlopen monkeypatcheado, sin red): una conexión
     # caída a mitad de la descarga de un copy_skill no debe tirar abajo
-    # todo `sarch verify` con un traceback; debe quedar en Revisar como
+    # todo `pitcrew verify` con un traceback; debe quedar en Revisar como
     # cualquier otro fallo de red.
     def fake_urlopen(request: object, timeout: float) -> _BreakingResponse:
         return _BreakingResponse(ConnectionResetError("conexión perdida"))
@@ -862,7 +862,7 @@ def test_verify_item_survives_dropped_connection_during_archive_download(
 
 
 # =========================================================================
-# sarch verify (CLI)
+# pitcrew verify (CLI)
 # =========================================================================
 
 
@@ -1305,7 +1305,7 @@ def _two_healthy_items(tmp_path: Path) -> tuple[Path, Path, Deps]:
 def test_unexpected_exception_in_item_becomes_bloqueado_card(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    import setup_architect.cli as cli_module
+    import pitcrew.cli as cli_module
 
     config_dir, items_path, deps = _two_healthy_items(tmp_path)
     real_verify_item = cli_module.verify_item
@@ -1331,7 +1331,7 @@ def test_unexpected_exception_in_item_becomes_bloqueado_card(
 def test_keyboard_interrupt_in_item_propagates(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    import setup_architect.cli as cli_module
+    import pitcrew.cli as cli_module
 
     config_dir, items_path, deps = _two_healthy_items(tmp_path)
 
@@ -1412,7 +1412,7 @@ def test_shell_injection_beats_allowed_tools_in_the_pipeline() -> None:
 def test_country_domain_of_the_source_never_changes_the_card() -> None:
     # Caracterización: el verificador nunca miró el país, así que pasa a la
     # primera; fija que siga así. Lo que lleva la URL se compara sin ella.
-    from setup_architect.models import AddMcp, TrustCard
+    from pitcrew.models import AddMcp, TrustCard
 
     def failing_fetch(path: str) -> dict[str, Any]:
         raise AssertionError("una fuente no soportada no consulta GitHub")

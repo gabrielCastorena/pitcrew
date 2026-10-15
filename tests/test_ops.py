@@ -22,9 +22,9 @@ from typing import Callable
 
 import pytest
 
-from setup_architect.apply import ops
-from setup_architect.apply.ops import ApplyContext, OpError, Undo, execute, prepare
-from setup_architect.models import (
+from pitcrew.apply import ops
+from pitcrew.apply.ops import ApplyContext, OpError, Undo, execute, prepare
+from pitcrew.models import (
     AddMcp,
     CopySkill,
     ManualStep,
@@ -277,7 +277,7 @@ def test_write_file_overwrites_and_keeps_mode(env: Env) -> None:
         "../../x",
         ".claude/skills/../../../x",
         "{root}/fuera.txt",  # ruta absoluta fuera de la lista
-        "/etc/sarch-no-debe-existir",
+        "/etc/pitcrew-no-debe-existir",
         ".claude/settings.json",
         ".claude/settings.local.json",
         ".mcp.json",
@@ -292,7 +292,7 @@ def test_write_file_overwrites_and_keeps_mode(env: Env) -> None:
 def test_write_file_malicious_path_rejected_before_writing(env: Env, path: str) -> None:
     op = WriteFile(path.replace("{root}", str(env.root)), "malo")
     assert_both_fail_without_effects(env, op)
-    assert not Path("/etc/sarch-no-debe-existir").exists()
+    assert not Path("/etc/pitcrew-no-debe-existir").exists()
 
 
 def test_write_file_relative_without_project_rejected(env: Env) -> None:

@@ -1,6 +1,6 @@
 [project]
-name = "setup-architect"
-version = "0.1.0"
+name = "pitcrew-cc"
+version = "0.2.0"
 description = "Verifica herramientas, renderiza un plan y lo aplica para configurar Claude Code."
 requires-python = ">=3.12"
 dependencies = []
@@ -9,7 +9,7 @@ dependencies = []
 dev = ["pytest"]
 
 [project.scripts]
-sarch = "setup_architect.cli:main"
+pitcrew = "pitcrew.cli:main"
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

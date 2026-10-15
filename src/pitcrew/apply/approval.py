@@ -25,8 +25,8 @@ import unicodedata
 from pathlib import Path
 from typing import TextIO
 
-from setup_architect.apply.paths import PathError, resolve_target
-from setup_architect.models import (
+from pitcrew.apply.paths import PathError, resolve_target
+from pitcrew.models import (
     AddMcp,
     CopySkill,
     Level,
@@ -37,8 +37,8 @@ from setup_architect.models import (
     TrustCard,
     WriteFile,
 )
-from setup_architect.plan_io import plan_hash
-from setup_architect.render.text import safe_text
+from pitcrew.plan_io import plan_hash
+from pitcrew.render.text import safe_text
 
 _YES = frozenset({"s", "si", "sí", "y", "yes"})
 _LEVEL_NOTE = {

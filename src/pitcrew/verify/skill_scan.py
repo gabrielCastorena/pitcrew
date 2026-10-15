@@ -12,8 +12,8 @@ import os
 import re
 from pathlib import Path
 
-from setup_architect.forbidden import forbidden_component
-from setup_architect.models import Flag
+from pitcrew.forbidden import forbidden_component
+from pitcrew.models import Flag
 
 # Tolerantes a espacios variables y opciones intermedias (p. ej. `sudo`,
 # flags de curl/wget) entre el comando de descarga y el intérprete al que

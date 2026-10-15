@@ -11,9 +11,9 @@ from __future__ import annotations
 
 import html
 
-from setup_architect.models import Level, Plan, TrustCard
-from setup_architect.render.layers import Layer, RenderItem, group_by_layer, permissions_for
-from setup_architect.render.text import safe_text
+from pitcrew.models import Level, Plan, TrustCard
+from pitcrew.render.layers import Layer, RenderItem, group_by_layer, permissions_for
+from pitcrew.render.text import safe_text
 
 CSP = "default-src 'none'; style-src 'unsafe-inline'"
 EMPTY_LAYER = "(ninguna)"

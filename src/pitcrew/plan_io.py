@@ -1,11 +1,11 @@
-"""Carga y validación del plan JSON de setup-architect.
+"""Carga y validación del plan JSON de Pitcrew.
 
 La validación es manual con stdlib (`json` y un mapa `op -> dataclass`),
 sin librerías de esquemas. `load_plan` nunca deja escapar `KeyError` ni
 `TypeError`: cualquier problema de forma, tipo o valor se traduce a
 `PlanError`.
 
-`parse_item` se expone por separado porque `sarch verify` necesita
+`parse_item` se expone por separado porque `pitcrew verify` necesita
 parsear items sueltos (`{"items": [PlanItem...]}`, sin `schema_version`
 ni `environment`) con la misma lista cerrada de operaciones.
 
@@ -20,7 +20,7 @@ import hashlib
 import json
 from typing import Any
 
-from setup_architect.models import (
+from pitcrew.models import (
     AddMcp,
     Candidate,
     CopySkill,

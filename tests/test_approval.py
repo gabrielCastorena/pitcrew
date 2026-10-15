@@ -19,8 +19,8 @@ from typing import Iterator
 
 import pytest
 
-from setup_architect.apply import approval
-from setup_architect.apply.approval import (
+from pitcrew.apply import approval
+from pitcrew.apply.approval import (
     NoTTYError,
     ask,
     ask_secret,
@@ -28,7 +28,7 @@ from setup_architect.apply.approval import (
     describe_op,
     open_tty,
 )
-from setup_architect.models import (
+from pitcrew.models import (
     AddMcp,
     Candidate,
     CopySkill,
@@ -41,7 +41,7 @@ from setup_architect.models import (
     TrustCard,
     WriteFile,
 )
-from setup_architect.plan_io import plan_hash
+from pitcrew.plan_io import plan_hash
 
 # Con lo que termina cada pregunta de `approval`: es parte del contrato.
 PROMPT_ENDINGS = ("[s/N]: ", "(no se mostrará): ")
@@ -552,7 +552,7 @@ def test_describe_op_is_one_safe_line() -> None:
 
 
 def test_summary_marks_unverified_as_not_installable(home: Path, proj: Path) -> None:
-    from setup_architect.models import Flag
+    from pitcrew.models import Flag
 
     plan = plan_of(
         PlanItem(candidate("caida"), [SetEnv("A")]),
@@ -700,7 +700,7 @@ NOTHING_VERIFIED = "Nada de este item se verificó: la fuente no es un repo de G
 
 
 def test_summary_says_nothing_was_verified_for_an_unsupported_source(home: Path, proj: Path) -> None:
-    from setup_architect.models import Flag
+    from pitcrew.models import Flag
 
     plan = plan_of(
         PlanItem(candidate("de-gitlab"), [SetEnv("A")]),
@@ -951,7 +951,7 @@ def test_hostile_manual_step_title_cannot_forge_pending_warning_lines(home: Path
 
 
 def _unverified_card(name: str) -> TrustCard:
-    from setup_architect.models import Flag
+    from pitcrew.models import Flag
 
     return TrustCard(
         candidate=name,
@@ -1000,7 +1000,7 @@ def test_no_pending_warning_when_every_manual_step_is_blocked(home: Path, proj: 
 @pytest.mark.parametrize("level", list(Level))
 @pytest.mark.parametrize("unverified", [False, True])
 def test_summary_uses_the_same_installable_rule_as_the_runner(level: Level, unverified: bool) -> None:
-    from setup_architect.apply import runner
+    from pitcrew.apply import runner
 
     base = _unverified_card("x") if unverified else card("x")
     subject = TrustCard(

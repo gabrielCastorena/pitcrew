@@ -1,6 +1,6 @@
 # Diseño
 
-Cómo funciona setup-architect por dentro, qué protege y qué no. Para instalarlo y usarlo, mira el `README.md`.
+Cómo funciona Pitcrew por dentro, qué protege y qué no. Para instalarlo y usarlo, mira el `README.es.md`.
 
 ## Objetivo
 
@@ -11,9 +11,9 @@ Armar el setup de Claude Code de un proyecto (un `CLAUDE.md`, skills, servidores
 Hay dos mitades con responsabilidades separadas:
 
 - **El plugin** (`plugin/`) razona. Una skill entrevista al usuario, elige el entorno (proyecto, global o chat), lanza subagentes investigadores y redacta el plan. Los investigadores (`plugin/agents/researcher.md`) solo tienen búsqueda y lectura web, sin shell ni escritura, y solo pueden devolver un JSON con items.
-- **El CLI `sarch`** (`src/setup_architect/`) hace todo lo determinista, sin usar ningún modelo: verifica (`verify`), muestra el plan (`render`), lo aplica (`apply`), lo deshace (`revert`) y revisa lo instalado (`audit`).
+- **El CLI `pitcrew`** (`src/pitcrew/`) hace todo lo determinista, sin usar ningún modelo: verifica (`verify`), muestra el plan (`render`), lo aplica (`apply`), lo deshace (`revert`) y revisa lo instalado (`audit`).
 
-El flujo es lineal: entrevista → investigación → `sarch verify` → `plan.json` → `sarch render` → `sarch apply`, que corre el usuario en su terminal. `plan.json` es la única fuente de verdad: de él salen las dos vistas y es lo único que lee el aplicador.
+El flujo es lineal: entrevista → investigación → `pitcrew verify` → `plan.json` → `pitcrew render` → `pitcrew apply`, que corre el usuario en su terminal. `plan.json` es la única fuente de verdad: de él salen las dos vistas y es lo único que lee el aplicador.
 
 ## Modelo de amenaza
 
@@ -22,12 +22,12 @@ El riesgo principal es que un texto de internet (un README, una página, una des
 1. **Lo que lee internet no ejecuta nada.** Los investigadores no tienen shell ni escritura. Lo que devuelven son datos: la skill no sigue órdenes que aparezcan en ellos, y descarta cualquier `write_file` que un investigador proponga.
 2. **La confianza la calcula un programa.** El verificador no usa ningún modelo, así que ningún texto puede convencerlo de subir un nivel.
 3. **Lista cerrada de operaciones.** El plan solo puede expresar cinco operaciones tipadas. No hay forma de expresar un comando de shell libre, y una clave desconocida invalida el plan entero.
-4. **La aprobación es del usuario.** El aplicador lee la respuesta de la terminal (`/dev/tty`), no de stdin, y vacía la entrada pendiente antes de cada pregunta. Calcula el hash del plan por su cuenta y muestra un resumen generado del propio archivo, no de lo que diga Claude. Es una garantía procedimental: un programa que lance `sarch apply` dentro de su propia pseudoterminal podría contestar. Por eso la skill nunca corre el aplicador.
+4. **La aprobación es del usuario.** El aplicador lee la respuesta de la terminal (`/dev/tty`), no de stdin, y vacía la entrada pendiente antes de cada pregunta. Calcula el hash del plan por su cuenta y muestra un resumen generado del propio archivo, no de lo que diga Claude. Es una garantía procedimental: un programa que lance `pitcrew apply` dentro de su propia pseudoterminal podría contestar. Por eso la skill nunca corre el aplicador.
 5. **El `CLAUDE.md` es una vía de inyección persistente.** Se carga en cada sesión futura, así que se valida antes de escribirlo y siempre se confirma aparte.
 
 ## Verificación
 
-`sarch verify` evalúa cada item del plan contra el repo de GitHub de su fuente y devuelve una ficha con nivel, razones, banderas, la referencia fijada (`pinned_ref`) y la popularidad. Los umbrales viven en `config/thresholds.toml`; los dueños oficiales y los nombres conocidos, en `config/official_owners.txt` y `config/known_names.txt`.
+`pitcrew verify` evalúa cada item del plan contra el repo de GitHub de su fuente y devuelve una ficha con nivel, razones, banderas, la referencia fijada (`pinned_ref`) y la popularidad. Los umbrales viven en `config/thresholds.toml`; los dueños oficiales y los nombres conocidos, en `config/official_owners.txt` y `config/known_names.txt`.
 
 **Vetos** (cualquiera da `Bloqueado`, sin importar lo demás):
 
@@ -66,14 +66,14 @@ La popularidad nunca decide un nivel; solo ordena herramientas del mismo nivel.
 | `write_file` | Escribe solo `CLAUDE.md` o archivos bajo `.claude/skills/`. Rechaza `settings.json`, hooks y `.mcp.json`, y lo que escribe bajo `.claude/skills/` pasa por los vetos del escáner |
 | `copy_skill` | Copia una skill de un commit fijo de un repo de GitHub |
 | `add_mcp` | Registra un servidor MCP con `claude mcp add`; es la única vía para tocar la configuración de MCP. Un servidor stdio exige versión exacta del paquete o imagen de docker fijada por `sha256` |
-| `set_env` | Pide un secreto en la terminal y lo guarda en `~/.config/setup-architect/secrets.env` |
+| `set_env` | Pide un secreto en la terminal y lo guarda en `~/.config/pitcrew/secrets.env` |
 | `manual_step` | Imprime una guía para lo que no se puede automatizar |
 
 Los hooks y `settings.json` quedan fuera a propósito: ejecutan comandos de shell, y si el aplicador pudiera escribirlos, la lista cerrada no serviría de nada.
 
 ## Aplicación
 
-`sarch apply` sigue este orden, y aborta sin ejecutar nada ante cualquier error inesperado antes de ejecutar:
+`pitcrew apply` sigue este orden, y aborta sin ejecutar nada ante cualquier error inesperado antes de ejecutar:
 
 1. Lee el plan una vez y calcula su hash.
 2. Vuelve a verificar cada item. No confía en las fichas que haya generado la skill.
@@ -92,11 +92,11 @@ Los hooks y `settings.json` quedan fuera a propósito: ejecutan comandos de shel
 
 ## Manifiesto y reversión
 
-El manifiesto vive en `.claude/setup-architect/manifest.json` (proyecto) o en `~/.claude/setup-architect/manifest.json` (global), con permisos 700 y 600, y los respaldos en `backups/<run_id>/` junto a él. Cada paso guarda la corrida, el candidato, la fuente, la operación, el nivel, la referencia fijada, el estado y cómo deshacerlo.
+El manifiesto vive en `.claude/pitcrew/manifest.json` (proyecto) o en `~/.claude/pitcrew/manifest.json` (global), con permisos 700 y 600, y los respaldos en `backups/<run_id>/` junto a él. Cada paso guarda la corrida, el candidato, la fuente, la operación, el nivel, la referencia fijada, el estado y cómo deshacerlo.
 
-`sarch revert <run_id>` deshace los pasos de esa corrida en orden inverso. No confía en el manifiesto: antes de borrar o restaurar un archivo comprueba que el destino esté dentro del árbol al que pertenece el manifiesto y sea un `CLAUDE.md` o algo bajo `.claude/skills/`, y que el respaldo esté dentro de su directorio de respaldos. Un manifiesto corrupto o con forma inesperada no se interpreta ni se sobrescribe.
+`pitcrew revert <run_id>` deshace los pasos de esa corrida en orden inverso. No confía en el manifiesto: antes de borrar o restaurar un archivo comprueba que el destino esté dentro del árbol al que pertenece el manifiesto y sea un `CLAUDE.md` o algo bajo `.claude/skills/`, y que el respaldo esté dentro de su directorio de respaldos. Un manifiesto corrupto o con forma inesperada no se interpreta ni se sobrescribe.
 
-`sarch audit` vuelve a consultar lo instalado y señala lo que tiene una versión nueva, quedó inactivo o ya no existe.
+`pitcrew audit` vuelve a consultar lo instalado y señala lo que tiene una versión nueva, quedó inactivo o ya no existe.
 
 ## Fuera de alcance
 
@@ -104,4 +104,4 @@ El manifiesto vive en `.claude/setup-architect/manifest.json` (proyecto) o en `~
 - Verificar fuentes que no son repos de GitHub.
 - Revertir una parte de una corrida.
 
-Los límites conocidos de esta versión están en la sección "Límites conocidos" del `README.md`.
+Los límites conocidos de esta versión están en la sección "Límites conocidos" del `README.es.md`.

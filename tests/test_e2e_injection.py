@@ -49,15 +49,15 @@ from typing import Any
 
 import pytest
 
-from setup_architect.apply.claude_md import validate_claude_md
-from setup_architect.apply.runner import run_apply
-from setup_architect.cli import main
-from setup_architect.config import Config, load_config
-from setup_architect.models import Level, Plan
-from setup_architect.plan_io import PlanError, load_plan
-from setup_architect.render.html import CSP, render_html
-from setup_architect.render.text import render_text
-from setup_architect.verify.pipeline import Deps, verify_item
+from pitcrew.apply.claude_md import validate_claude_md
+from pitcrew.apply.runner import run_apply
+from pitcrew.cli import main
+from pitcrew.config import Config, load_config
+from pitcrew.models import Level, Plan
+from pitcrew.plan_io import PlanError, load_plan
+from pitcrew.render.html import CSP, render_html
+from pitcrew.render.text import render_text
+from pitcrew.verify.pipeline import Deps, verify_item
 from test_approval import PtySession, wait_for
 from test_cli_verify import make_fetch
 from test_runner import (  # noqa: F401  (`world` y `pty` son fixtures)
@@ -94,7 +94,7 @@ def read_json(name: str) -> Any:
 
 
 def config() -> Config:
-    """La configuración del paquete: la misma que usa `sarch apply`."""
+    """La configuración del paquete: la misma que usa `pitcrew apply`."""
     return load_config(CONFIG_DIR)
 
 
@@ -641,7 +641,7 @@ def test_full_pipeline_clean(world: World, pty: PtySession, tmp_path: Path) -> N
 
     assert run_apply(plan, deps(world, pty.path), config(), world.proj) == 0
 
-    wait_for(pty, "sarch revert")
+    wait_for(pty, "pitcrew revert")
     text = pty.text()
     confirm = f"{NOTHING_VERIFIED} ¿Instalar {CONTEXT} de todos modos? [s/N]: "
     assert text.count(confirm) == 1

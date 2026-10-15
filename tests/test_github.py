@@ -9,7 +9,7 @@ from typing import Any
 
 import pytest
 
-from setup_architect.verify.github import (
+from pitcrew.verify.github import (
     FetchError,
     Fetcher,
     VerificationError,

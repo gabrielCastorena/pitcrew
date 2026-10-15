@@ -16,7 +16,7 @@ import stat
 import unicodedata
 from pathlib import Path, PurePosixPath
 
-from setup_architect.forbidden import forbidden_component
+from pitcrew.forbidden import forbidden_component
 
 _SKILLS = (".claude", "skills")
 

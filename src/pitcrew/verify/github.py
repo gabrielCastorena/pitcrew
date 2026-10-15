@@ -18,7 +18,7 @@ import urllib.request
 from datetime import datetime
 from typing import Any, Callable
 
-from setup_architect.models import RepoFacts
+from pitcrew.models import RepoFacts
 
 _API_BASE = "https://api.github.com"
 _TIMEOUT_SECONDS = 10

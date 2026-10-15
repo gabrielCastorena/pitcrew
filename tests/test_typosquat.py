@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from setup_architect.verify.typosquat import detect_typosquat, levenshtein
+from pitcrew.verify.typosquat import detect_typosquat, levenshtein
 
 KNOWN: list[tuple[str, str]] = [
     ("modelcontextprotocol", "servers"),

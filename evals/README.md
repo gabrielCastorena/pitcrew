@@ -1,6 +1,6 @@
-# Evals de setup-architect
+# Evals de Pitcrew
 
-Las piezas deterministas del proyecto (verificador, renderizador y aplicador) se cubren con tests automáticos. La calidad de las recomendaciones no: depende del razonamiento de Claude durante la entrevista, la investigación y el armado del plan, y eso no se puede comprobar con un test. Por eso se evalúa a mano, corriendo `/setup-architect:setup-architect` sobre proyectos de ejemplo y revisando el resultado con una checklist.
+Las piezas deterministas del proyecto (verificador, renderizador y aplicador) se cubren con tests automáticos. La calidad de las recomendaciones no: depende del razonamiento de Claude durante la entrevista, la investigación y el armado del plan, y eso no se puede comprobar con un test. Por eso se evalúa a mano, corriendo `/pitcrew:pitcrew` sobre proyectos de ejemplo y revisando el resultado con una checklist.
 
 Los casos y sus resultados se guardan para comparar cuando cambie la skill o salgan herramientas nuevas.
 
@@ -14,11 +14,11 @@ Hay tres casos:
 - `evals/cases/cli-sin-servicios.md`: una CLI en Python sin base de datos ni servicios externos. Comprueba que la skill no infla el setup.
 - `evals/cases/repo-sin-mantenimiento.md`: un proyecto cuya herramienta más a mano viene de un repo pequeño y sin mantenimiento. Comprueba que el verificador no la deja en `Confiable`.
 
-Para correr un caso: crea un directorio vacío y desechable, entra en él desde tu terminal normal, lanza `claude --plugin-dir <ruta al checkout>/plugin`, corre `/setup-architect:setup-architect` y contesta la entrevista con lo que dice el caso. Lo que el caso no dice, contéstalo como "no sé" o "no aplica".
+Para correr un caso: crea un directorio vacío y desechable, entra en él desde tu terminal normal, lanza `claude --plugin-dir <ruta al checkout>/plugin`, corre `/pitcrew:pitcrew` y contesta la entrevista con lo que dice el caso. Lo que el caso no dice, contéstalo como "no sé" o "no aplica".
 
 ## Checklist
 
-Después de correr `/setup-architect:setup-architect` con un caso, se revisa el setup propuesto con estas cuatro preguntas:
+Después de correr `/pitcrew:pitcrew` con un caso, se revisa el setup propuesto con estas cuatro preguntas:
 
 - [ ] ¿Las preguntas fueron pertinentes y no de relleno?
 - [ ] ¿Recomendó al menos una herramienta útil que no conocía?

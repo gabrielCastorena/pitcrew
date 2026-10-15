@@ -1,6 +1,6 @@
 # Política de seguridad
 
-setup-architect instala piezas en tu configuración de Claude Code, así que un fallo de seguridad aquí puede acabar ejecutando código en la máquina de quien lo usa. Si encuentras uno, repórtalo en privado, no en un issue público.
+Pitcrew instala piezas en tu configuración de Claude Code, así que un fallo de seguridad aquí puede acabar ejecutando código en la máquina de quien lo usa. Si encuentras uno, repórtalo en privado, no en un issue público.
 
 ## Cómo reportar
 
@@ -18,10 +18,10 @@ Por ejemplo:
 
 - Que algo se instale sin pasar por el verificador o sin la aprobación del usuario en su terminal.
 - Que texto de internet (una descripción, un README, una página) acabe como una operación ejecutable o dentro de un `CLAUDE.md` aceptado.
-- Que `sarch apply` o `sarch revert` escriban, borren o restauren algo fuera de lo que declara el plan o el manifiesto.
+- Que `pitcrew apply` o `pitcrew revert` escriban, borren o restauren algo fuera de lo que declara el plan o el manifiesto.
 - Que un secreto acabe en el manifiesto, en un registro o en la conversación con Claude.
 
-Los límites ya documentados en la sección "Límites conocidos" del `README.md` no son vulnerabilidades nuevas, salvo que encuentres una forma de ir más allá de lo que describen.
+Los límites ya documentados en la sección "Límites conocidos" del `README.es.md` no son vulnerabilidades nuevas, salvo que encuentres una forma de ir más allá de lo que describen.
 
 ## Versiones con soporte
 

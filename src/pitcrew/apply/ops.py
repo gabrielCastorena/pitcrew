@@ -27,10 +27,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Iterator, Literal
 
-from setup_architect.apply.paths import PathError, resolve_target
-from setup_architect.archive import ArchiveError, safe_extract
-from setup_architect.forbidden import forbidden_component
-from setup_architect.models import (
+from pitcrew.apply.paths import PathError, resolve_target
+from pitcrew.archive import ArchiveError, safe_extract
+from pitcrew.forbidden import forbidden_component
+from pitcrew.models import (
     AddMcp,
     CopySkill,
     ManualStep,
@@ -38,7 +38,7 @@ from setup_architect.models import (
     SetEnv,
     WriteFile,
 )
-from setup_architect.verify.skill_scan import (
+from pitcrew.verify.skill_scan import (
     content_vetoes,
     frontmatter_veto,
     scan_skill_dir,
@@ -267,7 +267,7 @@ def _execute_write_file(op: WriteFile, ctx: ApplyContext) -> None:
     # Se escribe en un archivo hermano y se renombra encima: el destino
     # nunca queda a medias y, si fuera un symlink, se reemplaza el enlace
     # en vez de escribir a través de él.
-    temp = target.with_name(f".{target.name}.sarch-{secrets.token_hex(8)}.tmp")
+    temp = target.with_name(f".{target.name}.pitcrew-{secrets.token_hex(8)}.tmp")
     try:
         try:
             mode = stat.S_IMODE(os.lstat(target).st_mode)
@@ -320,7 +320,7 @@ def _staged_skill(op: CopySkill, ctx: ApplyContext) -> Iterator[tuple[Path, Path
     if os.path.lexists(dest):
         raise OpError(f"el destino de la skill ya existe: {dest}")
 
-    with tempfile.TemporaryDirectory(prefix="sarch-skill-") as tmp:
+    with tempfile.TemporaryDirectory(prefix="pitcrew-skill-") as tmp:
         staging = Path(tmp) / "extract"
         try:
             safe_extract(archive, staging)

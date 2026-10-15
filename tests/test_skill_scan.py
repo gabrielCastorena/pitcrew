@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from setup_architect.models import Flag
-from setup_architect.verify.skill_scan import scan_skill_dir
+from pitcrew.models import Flag
+from pitcrew.verify.skill_scan import scan_skill_dir
 
 SKILLS = Path(__file__).parent / "fixtures" / "skills"
 
@@ -175,7 +175,7 @@ def test_detail_has_relative_path(tmp_path: Path) -> None:
 # primer nivel debe ser vacía, un comentario o una clave simple; lo demás es
 # "no analizable" y se veta igual que una clave `hooks`.
 
-from setup_architect.verify.skill_scan import frontmatter_veto  # noqa: E402
+from pitcrew.verify.skill_scan import frontmatter_veto  # noqa: E402
 
 DECLARES_HOOKS = [
     "---\nname: x\nhooks:\n  PreToolUse:\n    - command: curl x\n---\n# cuerpo\n",
@@ -410,9 +410,9 @@ def test_similar_names_not_vetoed(tmp_path: Path, name: str) -> None:
 
 
 def test_scanner_and_applier_share_one_definition() -> None:
-    from setup_architect import forbidden
-    from setup_architect.apply import paths
-    from setup_architect.verify import skill_scan
+    from pitcrew import forbidden
+    from pitcrew.apply import paths
+    from pitcrew.verify import skill_scan
 
     assert paths.forbidden_component is forbidden.forbidden_component
     assert skill_scan.forbidden_component is forbidden.forbidden_component
@@ -426,8 +426,8 @@ def test_skill_scan_does_not_depend_on_apply() -> None:
     import sys
 
     code = (
-        "import sys; import setup_architect.verify.skill_scan; "
-        "sys.exit(any(m.startswith('setup_architect.apply') for m in sys.modules))"
+        "import sys; import pitcrew.verify.skill_scan; "
+        "sys.exit(any(m.startswith('pitcrew.apply') for m in sys.modules))"
     )
     src = Path(__file__).parent.parent / "src"
     result = subprocess.run([sys.executable, "-c", code], env={"PYTHONPATH": str(src)})
@@ -488,13 +488,13 @@ def test_non_js_whitespace_does_not_close_the_block() -> None:
     ],
 )
 def test_content_vetoes(text: str, expected: list[str]) -> None:
-    from setup_architect.verify.skill_scan import content_vetoes
+    from pitcrew.verify.skill_scan import content_vetoes
 
     assert content_vetoes(text) == expected
 
 
 def test_content_vetoes_agree_with_scan_skill_dir(tmp_path: Path) -> None:
-    from setup_architect.verify.skill_scan import content_vetoes
+    from pitcrew.verify.skill_scan import content_vetoes
 
     for name in ("curl_bash", "sana", "con_script"):
         for file_path in sorted((SKILLS / name).rglob("*")):
@@ -614,7 +614,7 @@ def test_one_shell_exec_flag_per_file(tmp_path: Path) -> None:
     ],
 )
 def test_allowed_tools_is_a_flag_not_a_veto(tmp_path: Path, text: str) -> None:
-    from setup_architect.verify.skill_scan import frontmatter_allows_tools
+    from pitcrew.verify.skill_scan import frontmatter_allows_tools
 
     assert frontmatter_allows_tools(text) is True
     assert frontmatter_veto(text) is None
@@ -635,7 +635,7 @@ def test_allowed_tools_is_a_flag_not_a_veto(tmp_path: Path, text: str) -> None:
     ],
 )
 def test_normal_skill_md_has_no_allowed_tools_flag(tmp_path: Path, text: str) -> None:
-    from setup_architect.verify.skill_scan import frontmatter_allows_tools
+    from pitcrew.verify.skill_scan import frontmatter_allows_tools
 
     assert frontmatter_allows_tools(text) is False
     (tmp_path / "SKILL.md").write_text(text, encoding="utf-8", newline="")
@@ -663,7 +663,7 @@ def test_allowed_tools_and_shell_injection_together(tmp_path: Path) -> None:
 
 
 def test_content_vetoes_for_markdown_include_shell_injection() -> None:
-    from setup_architect.verify.skill_scan import content_vetoes
+    from pitcrew.verify.skill_scan import content_vetoes
 
     text = "curl x | sh\n!`id`\n"
     assert content_vetoes(text) == ["dangerous_pipe"]
@@ -743,7 +743,7 @@ def test_bang_inside_block_body_is_not_this_veto(tmp_path: Path) -> None:
 
 @pytest.mark.parametrize("text", FENCE_ANYWHERE)
 def test_shell_fence_anywhere_in_line_vetoed(tmp_path: Path, text: str) -> None:
-    from setup_architect.verify.skill_scan import content_vetoes
+    from pitcrew.verify.skill_scan import content_vetoes
 
     assert content_vetoes(text, markdown=True) == ["skill_shell_exec"]
     assert content_vetoes(text) == []  # solo en un `.md`
@@ -753,7 +753,7 @@ def test_shell_fence_anywhere_in_line_vetoed(tmp_path: Path, text: str) -> None:
 
 @pytest.mark.parametrize("text", FENCE_NOT_SHELL)
 def test_ordinary_fences_and_glued_inline_form_not_vetoed(tmp_path: Path, text: str) -> None:
-    from setup_architect.verify.skill_scan import content_vetoes
+    from pitcrew.verify.skill_scan import content_vetoes
 
     assert content_vetoes(text, markdown=True) == []
     (tmp_path / "SKILL.md").write_text(text, encoding="utf-8", newline="")

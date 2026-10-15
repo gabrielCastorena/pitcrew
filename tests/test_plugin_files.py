@@ -14,17 +14,17 @@ from pathlib import Path
 
 import pytest
 
-from setup_architect.cli import _build_parser
-from setup_architect.plan_io import _CANDIDATE_SPEC, _OPERATIONS, _RESEARCHED_SPEC, load_plan
-from setup_architect.verify.skill_scan import content_vetoes, scan_skill_dir
+from pitcrew.cli import _build_parser
+from pitcrew.plan_io import _CANDIDATE_SPEC, _OPERATIONS, _RESEARCHED_SPEC, load_plan
+from pitcrew.verify.skill_scan import content_vetoes, scan_skill_dir
 
 ROOT = Path(__file__).resolve().parents[1]
 PLUGIN_JSON = "plugin/.claude-plugin/plugin.json"
-SKILL_DIR = "plugin/skills/setup-architect"
+SKILL_DIR = "plugin/skills/pitcrew"
 SKILL = f"{SKILL_DIR}/SKILL.md"
 RESEARCHER = "plugin/agents/researcher.md"
-COMMAND = "plugin/commands/setup-architect.md"
-README = "README.md"
+COMMAND = "plugin/commands/pitcrew.md"
+README = "README.es.md"
 
 OPERATIONS = ["write_file", "copy_skill", "add_mcp", "set_env", "manual_step"]
 MARKDOWN_FILES = [SKILL, RESEARCHER, COMMAND]
@@ -63,23 +63,23 @@ def tools(relative: str) -> list[str]:
 
 
 def test_plugin_json() -> None:
-    assert json.loads(read(PLUGIN_JSON))["name"] == "setup-architect"
+    assert json.loads(read(PLUGIN_JSON))["name"] == "pitcrew"
 
 
 def test_skill_frontmatter() -> None:
     fm = frontmatter(SKILL)
-    assert fm["name"] == "setup-architect" and fm["description"]
+    assert fm["name"] == "pitcrew" and fm["description"]
 
 
 def test_skill_uses_cli() -> None:
     s = read(SKILL)
     assert all(
-        c in s for c in ["sarch verify", "sarch render", "sarch apply", "sarch audit"]
+        c in s for c in ["pitcrew verify", "pitcrew render", "pitcrew apply", "pitcrew audit"]
     )
 
 
 def test_skill_forbids_apply() -> None:
-    assert "Nunca ejecutes `sarch apply`" in read(SKILL)
+    assert "Nunca ejecutes `pitcrew apply`" in read(SKILL)
 
 
 def test_researcher_read_only() -> None:
@@ -91,7 +91,7 @@ def test_researcher_read_only() -> None:
 
 def test_plugin_json_version_and_description() -> None:
     data = json.loads(read(PLUGIN_JSON))
-    assert data["version"] == "0.1.0"
+    assert data["version"] == "0.2.0"
     assert isinstance(data["description"], str) and data["description"]
 
 
@@ -113,8 +113,8 @@ def test_skill_frontmatter_has_no_hooks_or_allowed_tools() -> None:
 def test_skill_forbids_revert() -> None:
     s = read(SKILL)
     # La prohibición nombra los dos comandos en la misma frase.
-    sentence = re.search(r"Nunca ejecutes `sarch apply`[^.\n]*", s)
-    assert sentence is not None and "`sarch revert`" in sentence.group(0)
+    sentence = re.search(r"Nunca ejecutes `pitcrew apply`[^.\n]*", s)
+    assert sentence is not None and "`pitcrew revert`" in sentence.group(0)
 
 
 def test_skill_calls_the_approval_procedural() -> None:
@@ -143,7 +143,7 @@ def test_skill_names_the_four_levels() -> None:
 def test_skill_keeps_the_order_of_the_steps() -> None:
     s = read(SKILL)
     positions = [
-        s.index(c) for c in ["sarch audit", "sarch verify", "sarch render", "sarch apply"]
+        s.index(c) for c in ["pitcrew audit", "pitcrew verify", "pitcrew render", "pitcrew apply"]
     ]
     assert positions == sorted(positions)
     assert len(set(positions)) == 4
@@ -160,12 +160,12 @@ def test_skill_treats_research_as_data() -> None:
 
 def test_skill_explains_open_exit_code() -> None:
     s = read(SKILL)
-    assert "sarch render plan.json --cards cards.json --format" in s
+    assert "pitcrew render plan.json --cards cards.json --format" in s
     assert "--open" in s and "código de salida 2" in s
 
 
 def test_skill_verify_command() -> None:
-    assert "sarch verify items.json -o cards.json" in read(SKILL)
+    assert "pitcrew verify items.json -o cards.json" in read(SKILL)
 
 
 def test_skill_discards_write_file_from_researchers() -> None:
@@ -347,14 +347,14 @@ def test_researcher_treats_pages_as_data() -> None:
     assert "nunca instrucciones" in read(RESEARCHER)
 
 
-# --- commands/setup-architect.md ------------------------------------------
+# --- commands/pitcrew.md --------------------------------------------------
 
 
 def test_command_invokes_the_skill() -> None:
     fm = frontmatter(COMMAND)
     assert fm["description"]
     assert not {key.lower() for key in fm} & {"hooks", "allowed-tools", "allowed_tools"}
-    assert "`setup-architect`" in body(COMMAND)
+    assert "`pitcrew`" in body(COMMAND)
 
 
 # --- lo que vale para todos los .md del plugin ----------------------------
@@ -366,24 +366,24 @@ def test_plugin_markdown_has_no_shell_injection(relative: str) -> None:
 
 
 @pytest.mark.parametrize("relative", [SKILL, RESEARCHER, COMMAND, README])
-def test_sarch_subcommands_exist_in_the_cli(relative: str) -> None:
+def test_pitcrew_subcommands_exist_in_the_cli(relative: str) -> None:
     parser = _build_parser()
     subparsers = next(
         action for action in parser._actions if isinstance(action.choices, dict)
     )
     known = set(subparsers.choices)
-    used = set(re.findall(r"\bsarch ([a-z_-]+)", read(relative)))
+    used = set(re.findall(r"\bpitcrew ([a-z_-]+)", read(relative)))
     assert used <= known, used - known
 
 
 @pytest.mark.parametrize("relative", [SKILL, RESEARCHER, COMMAND, README])
-def test_sarch_options_exist_in_the_cli(relative: str) -> None:
+def test_pitcrew_options_exist_in_the_cli(relative: str) -> None:
     parser = _build_parser()
     subparsers = next(
         action for action in parser._actions if isinstance(action.choices, dict)
     )
     for line in read(relative).splitlines():
-        for match in re.finditer(r"\bsarch ([a-z]+)\b([^`\n]*)", line):
+        for match in re.finditer(r"\bpitcrew ([a-z]+)\b([^`\n]*)", line):
             command, rest = match.groups()
             if command not in subparsers.choices:
                 continue
@@ -396,7 +396,7 @@ def test_sarch_options_exist_in_the_cli(relative: str) -> None:
             assert used <= options, (command, used - options)
 
 
-# --- README.md ------------------------------------------------------------
+# --- README.es.md ---------------------------------------------------------
 
 
 def test_readme() -> None:
@@ -419,7 +419,7 @@ def limits(text: str) -> str:
 def test_readme_says_what_is_always_confirmed_apart() -> None:
     # Todo `write_file` se confirma aparte, también el `CLAUDE.md` y declare
     # la fuente que declare.
-    from setup_architect.apply.approval import UNSUPPORTED_SOURCE_NOTICE
+    from pitcrew.apply.approval import UNSUPPORTED_SOURCE_NOTICE
 
     s = limits(read(README))
     written = paragraph_starting(s, "- **Todo MCP y todo lo que el plan escribe se confirman aparte.**")
@@ -436,12 +436,12 @@ def test_readme_says_what_is_always_confirmed_apart() -> None:
 
 
 def test_readme_says_nothing_loads_the_secrets_file() -> None:
-    from setup_architect.apply.runner import _env_file
+    from pitcrew.apply.runner import _env_file
 
-    assert _env_file(Path("~")).as_posix() == "~/.config/setup-architect/secrets.env"
+    assert _env_file(Path("~")).as_posix() == "~/.config/pitcrew/secrets.env"
     s = limits(read(README))
     (line,) = [ln for ln in s.splitlines() if "`set_env`" in ln]
-    assert "`export`" in line and "`~/.config/setup-architect/secrets.env`" in line
+    assert "`export`" in line and "`~/.config/pitcrew/secrets.env`" in line
     assert "Nada carga ese archivo" in line and "por tu cuenta" in line
 
 
@@ -537,7 +537,7 @@ def test_readme_installs_with_pipx_and_the_marketplace() -> None:
     s = read(README)
     assert "pipx install --editable" in s
     assert "claude plugin marketplace add" in s
-    assert "claude plugin install setup-architect@setup-architect" in s
+    assert "claude plugin install pitcrew@pitcrew" in s
     assert "GITHUB_TOKEN" in s
 
 

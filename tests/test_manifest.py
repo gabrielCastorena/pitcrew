@@ -16,15 +16,15 @@ from pathlib import Path
 
 import pytest
 
-from setup_architect.apply.manifest import (
+from pitcrew.apply.manifest import (
     Manifest,
     ManifestError,
     StepRecord,
     manifest_path,
     revert,
 )
-from setup_architect.apply.ops import ApplyContext, Undo, execute, prepare
-from setup_architect.models import AddMcp, Level, SetEnv, WriteFile
+from pitcrew.apply.ops import ApplyContext, Undo, execute, prepare
+from pitcrew.models import AddMcp, Level, SetEnv, WriteFile
 
 RUN = "run-1"
 SECRET = "s3cr3t"
@@ -216,12 +216,12 @@ def test_valid_json_after_each_step(w: World) -> None:
 
 def test_manifest_path_with_project(tmp_path: Path) -> None:
     home, proj = tmp_path / "h", tmp_path / "p"
-    assert manifest_path(home, proj) == proj / ".claude" / "setup-architect" / "manifest.json"
+    assert manifest_path(home, proj) == proj / ".claude" / "pitcrew" / "manifest.json"
 
 
 def test_manifest_path_without_project(tmp_path: Path) -> None:
     home = tmp_path / "h"
-    assert manifest_path(home, None) == home / ".claude" / "setup-architect" / "manifest.json"
+    assert manifest_path(home, None) == home / ".claude" / "pitcrew" / "manifest.json"
 
 
 # --- Manifest -----------------------------------------------------------
@@ -1008,11 +1008,11 @@ def test_symlinked_anchor_refused(tmp_path: Path) -> None:
     link = tmp_path / "enlace"
     link.symlink_to(victim)
     m = Manifest(manifest_path(tmp_path, link))
-    backup = write(victim / ".claude" / "setup-architect" / "backups" / "x.bak", "INYECCION")
+    backup = write(victim / ".claude" / "pitcrew" / "backups" / "x.bak", "INYECCION")
     m.begin(rec(0, undo=Undo("delete_path", str(link / "CLAUDE.md"), None, None)))
     m.begin(rec(1, undo=Undo("delete_path", str(link / ".claude" / "skills" / "s"), None, None)))
     m.begin(rec(2, undo=Undo("restore_file", str(link / "CLAUDE.md"),
-                             str(link / ".claude" / "setup-architect" / "backups" / "x.bak"), None)))
+                             str(link / ".claude" / "pitcrew" / "backups" / "x.bak"), None)))
 
     assert len(revert(m, RUN, lambda argv: 0, tmp_path / "env.sh")) == 3
     assert md.read_text(encoding="utf-8") == "mío" and skill.exists() and backup.exists()
@@ -1025,9 +1025,9 @@ def test_symlinked_anchor_refused(tmp_path: Path) -> None:
         "manifest.json",
         ".claude/manifest.json",
         ".claude/otro/manifest.json",
-        ".claude/setup-architect/otro.json",
-        "claude/setup-architect/manifest.json",
-        ".claude/setup-architect/sub/manifest.json",
+        ".claude/pitcrew/otro.json",
+        "claude/pitcrew/manifest.json",
+        ".claude/pitcrew/sub/manifest.json",
     ],
 )
 def test_manifest_outside_expected_location_refuses_file_steps(tmp_path: Path, relative: str) -> None:
@@ -1060,7 +1060,7 @@ def test_manifest_outside_expected_location_refuses_file_steps(tmp_path: Path, r
 def test_relative_manifest_path_refuses_file_steps(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.chdir(tmp_path)
     md = write(tmp_path / "CLAUDE.md", "nuevo")
-    m = Manifest(Path(".claude/setup-architect/manifest.json"))
+    m = Manifest(Path(".claude/pitcrew/manifest.json"))
     m.begin(rec(0, undo=Undo("delete_path", str(md), None, None)))
     assert len(revert(m, RUN, lambda argv: 0, tmp_path / "env.sh")) == 1
     assert md.exists()
